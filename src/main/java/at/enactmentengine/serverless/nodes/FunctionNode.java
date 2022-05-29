@@ -12,7 +12,7 @@ import at.uibk.dps.exception.LatestFinishingTimeException;
 import at.uibk.dps.exception.LatestStartingTimeException;
 import at.uibk.dps.exception.MaxRunningTimeException;
 import at.uibk.dps.function.Function;
-import at.uibk.dps.socketutils.entity.Invocation;
+//import at.uibk.dps.socketutils.entity.Invocation;
 import at.uibk.dps.util.Event;
 import at.uibk.dps.util.Type;
 import com.google.gson.JsonObject;
@@ -208,16 +208,17 @@ public class FunctionNode extends Node {
          * stored in the database)
          */
         if (executionId != -1) {
-
-            /* Create a function invocation object */
+        /*
+            // Create a function invocation object
             Invocation functionInvocation = new Invocation(resourceLink, Utils.detectProvider(resourceLink).toString(),
                     Utils.detectRegion(resourceLink),
                     new Timestamp(start + TimeZone.getTimeZone("Europe/Rome").getOffset(start)),
                     new Timestamp(end + TimeZone.getTimeZone("Europe/Rome").getOffset(start)), (end - start),
                     Utils.checkResultSuccess(pairResult.getResult()).toString(), null, executionId);
 
-            /* Store the invocation in the database */
+            // Store the invocation in the database
             Utils.storeInDBFunctionInvocation(logger, functionInvocation, executionId);
+        */
         }
         return true;
     }
