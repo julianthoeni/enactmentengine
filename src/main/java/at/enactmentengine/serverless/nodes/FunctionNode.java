@@ -285,6 +285,8 @@ public class FunctionNode extends Node {
             /* Invoke the function with fault tolerance */
             FaultToleranceEngine ftEngine = null;
 
+            System.out.println("SLO HERE");
+
             if (getGoogleAccount() != null && getAzureAccount() != null && getIBMAccount() != null && getAWSAccount() != null) {
                 ftEngine = new FaultToleranceEngine(getGoogleAccount(), getAzureAccount(), getAWSAccount(), getIBMAccount());
             } else if (getGoogleAccount() != null && getAzureAccount() != null && getIBMAccount() != null) {
