@@ -66,6 +66,17 @@ public class Local {
                     length -= 1;
                 }
             }
+            boolean slo = parameterList.contains("--slo");
+            if(slo && !parameterList.contains("--export") && !parameterList.contains("--update") && !parameterList.contains("--simulate")){
+                if(parameterList.size() > 3){
+                    logger.error("When SLO is activated, no other parameters can be used!");
+                    return;
+                }
+                //TODO: Set SLO as active
+                logger.info("SLO ACTIVE");
+            }else{
+                logger.info("SLO NOT ACTIVE");
+            }
             boolean export = parameterList.contains("--export");
             if (export) {
                 length -= 1;
