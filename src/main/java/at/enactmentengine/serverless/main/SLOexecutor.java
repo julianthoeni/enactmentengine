@@ -1,6 +1,5 @@
 package at.enactmentengine.serverless.main;
 
-import at.enactmentengine.serverless.Simulation.SimulationParameters;
 import at.enactmentengine.serverless.nodes.ExecutableWorkflow;
 import at.enactmentengine.serverless.parser.Language;
 import at.enactmentengine.serverless.parser.YAMLParser;
@@ -21,16 +20,18 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Main class for the simulation part of the enactment engine.
- *
- * based on {@link Executor}, modified by @author mikahautz
+ * Main class of enactment engine which specifies the workflowInput file and starts the
+ * workflow on the machine on which it gets started.
+ * <p>
+ * based on @author markusmoosbrugger, jakobnoeckl
+ * extended by @author stefanpedratscher
  */
-public class Simulator {
+class SLOexecutor {
 
     /**
      * Logger for executor.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(Simulator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Executor.class);
 
     /**
      * Input of the workflow.
@@ -38,9 +39,11 @@ public class Simulator {
     private Map<String, Object> workflowInput;
 
     /**
-     * Default constructor for Simulator.
+     * Default constructor for executor.
      */
-    public Simulator() { }
+    public SLOexecutor() {
+        workflowInput = new HashMap<>();
+    }
 
     /**
      * workflowResult
@@ -52,12 +55,12 @@ public class Simulator {
      *
      * @return the result of the workflow.
      */
-    Map<String, Object> simulateWorkflow(String workflow, String workflowInput, int executionId, long start) {
+    Map<String, Object> executeWorkflow(String workflow, String workflowInput, int executionId, long start) {
         Map<String, Object> workflowResult = null;
 
         try {
             /* Convert file content to byte[] and execute the workflow */
-            workflowResult = simulateWorkflow(
+            workflowResult = executeWorkflow(
                     workflow == null ? null : FileUtils.readFileToByteArray(new File(workflow)),
                     workflowInput == null ? null : FileUtils.readFileToByteArray(new File(workflowInput)),
                     executionId, start);
@@ -78,7 +81,7 @@ public class Simulator {
      *
      * @return the result of the workflow.
      */
-    Map<String, Object> simulateWorkflow(byte[] workflow, byte[] workflowInput, int executionId, long start) {
+    Map<String, Object> executeWorkflow(byte[] workflow, byte[] workflowInput, int executionId, long start) {
 
         /* Disable hostname verification (enable OpenWhisk connections) */
         final Properties props = System.getProperties();
@@ -91,7 +94,7 @@ public class Simulator {
         }
 
         /* Create an executable workflow */
-        ExecutableWorkflow ex = new YAMLParser().parseExecutableWorkflow(workflow, Language.YAML, executionId, true, false);
+        ExecutableWorkflow ex = new YAMLParser().parseExecutableWorkflow(workflow, Language.YAML, executionId, false, true);
 
         /* Create variable to store workflow output */
         Map<String, Object> workflowOutput = null;
@@ -110,23 +113,20 @@ public class Simulator {
 
             /* Execute the workflow */
             try {
-                workflowOutput = ex.simulateWorkflow(this.workflowInput);
+                workflowOutput = ex.executeWorkflow(this.workflowInput);
             } catch (Exception e) {
                 LOGGER.error(e.getMessage(), e);
-                MongoDBAccess.saveLog(Event.WORKFLOW_FAILED, null, null, null, null, null, System.currentTimeMillis() - start,
-                        SimulationParameters.workflowCost, false, -1, -1, start, Type.SIM);
+                MongoDBAccess.saveLog(Event.WORKFLOW_FAILED, null, null, null, null, null, System.currentTimeMillis() - start, false, -1, -1, start, Type.EXEC);
                 return null;
             }
 
-            long simWorkflowDuration = MongoDBAccess.getLastEndDateOverall() - start;
+            /* Measure end time of the workflow execution */
+            long end = System.currentTimeMillis();
+            LOGGER.info("Execution took {}ms.", (end - start));
             boolean success = ex.getEndNode().getResult() != null;
             Event event = success ? Event.WORKFLOW_END : Event.WORKFLOW_FAILED;
-
-            LOGGER.info("Simulation of workflow takes {}ms with a cost of {}.", simWorkflowDuration, SimulationParameters.workflowCost);
-            MongoDBAccess.saveLog(event, null, null, null, null, null, simWorkflowDuration, SimulationParameters.workflowCost, success, -1, -1, start, Type.SIM);
+            MongoDBAccess.saveLog(event, null, null, null, null, null, end - start, success, -1, -1, start, Type.EXEC);
         }
-
         return workflowOutput;
     }
-
 }

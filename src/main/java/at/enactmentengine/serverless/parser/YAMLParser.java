@@ -30,7 +30,7 @@ public class YAMLParser {
      * @return Instance of class Executable workflow.
      */
     public ExecutableWorkflow parseExecutableWorkflow(byte[] filename, Language language, int executionId) {
-        return parseExecutableWorkflow(filename, language, executionId, false);
+        return parseExecutableWorkflow(filename, language, executionId, false, false);
     }
 
     /**
@@ -43,7 +43,7 @@ public class YAMLParser {
      *
      * @return Instance of class Executable workflow.
      */
-    public ExecutableWorkflow parseExecutableWorkflow(byte[] filename, Language language, int executionId, boolean simulate) {
+    public ExecutableWorkflow parseExecutableWorkflow(byte[] filename, Language language, int executionId, boolean simulate, boolean slo) {
 
         // Parse yaml file
         at.uibk.dps.afcl.Workflow workflow = null;
@@ -62,7 +62,7 @@ public class YAMLParser {
         }
 
 
-        return getExecutableWorkflow(workflow, executionId, simulate);
+        return getExecutableWorkflow(workflow, executionId, simulate, slo);
     }
 
     /**
@@ -90,7 +90,7 @@ public class YAMLParser {
             throw new NotImplementedException("Workflow language currently not supported.");
         }
 
-        return getExecutableWorkflow(workflow, executionId, false);
+        return getExecutableWorkflow(workflow, executionId, false, false);
     }
 
     /**
@@ -102,11 +102,11 @@ public class YAMLParser {
      *
      * @return executable workflow
      */
-    public ExecutableWorkflow getExecutableWorkflow(at.uibk.dps.afcl.Workflow workflow, int executionId, boolean simulate) {
+    public ExecutableWorkflow getExecutableWorkflow(at.uibk.dps.afcl.Workflow workflow, int executionId, boolean simulate , boolean slo) {
 
         ExecutableWorkflow executableWorkflow = null;
         if (workflow != null) {
-            NodeListHelper nodeListHelper = new NodeListHelper(simulate);
+            NodeListHelper nodeListHelper = new NodeListHelper(simulate,slo);
             nodeListHelper.executionId = executionId;
 
             // Create node pairs from workflow functions

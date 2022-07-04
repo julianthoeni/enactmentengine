@@ -16,10 +16,11 @@ import org.apache.commons.lang3.NotImplementedException;
 class NodeListHelper {
 
     /**
-     * Flag used to determine whether to simulate or execute.
+     * Flag used to determine whether to simulate, slo or execute.
      */
     private final boolean simulate;
-
+    private final boolean slo;
+    
     int executionId;
 
     /**
@@ -27,17 +28,28 @@ class NodeListHelper {
      */
     public NodeListHelper() {
         simulate = false;
+        slo = false;
     }
+
+//    /**
+//     * Constructor for NodeList helper
+//     *
+//     * @param simulate whether to simulate or execute
+//     */
+//    public NodeListHelper(boolean simulate) {
+//        this.simulate = simulate;
+//    }
 
     /**
      * Constructor for NodeList helper
      *
      * @param simulate whether to simulate or execute
-     */
-    public NodeListHelper(boolean simulate) {
+     * @param slo whether to use slo or execute
+    */
+    public NodeListHelper(boolean simulate, boolean slo) {
         this.simulate = simulate;
+        this.slo = slo;
     }
-
 
     /**
      * Convert a function to NodeList
@@ -55,7 +67,7 @@ class NodeListHelper {
         } else if (function instanceof AtomicFunction) {
             AtomicFunction tmp = (AtomicFunction) function;
             FunctionNode functionNode = new FunctionNode(tmp.getName(), tmp.getType(), tmp.getDeployment(),
-                    tmp.getProperties(), tmp.getConstraints(), tmp.getDataIns(), tmp.getDataOuts(), executionId);
+                    tmp.getProperties(), tmp.getConstraints(), tmp.getDataIns(), tmp.getDataOuts(), executionId, slo);
             return new ListPair<>(functionNode, functionNode);
         } else if (function instanceof IfThenElse) {
             return toNodeListIf((IfThenElse) function);

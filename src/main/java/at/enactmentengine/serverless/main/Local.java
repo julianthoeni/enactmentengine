@@ -52,6 +52,7 @@ public class Local {
         /* Workflow executor */
         Executor executor = new Executor();
         Simulator simulator = new Simulator();
+        SLOexecutor slos = new SLOexecutor();
 
         /* Check for inputs and execute workflow */
         Map<String, Object> result = null;
@@ -75,7 +76,7 @@ public class Local {
                 //TODO: Set SLO as active
                 logger.info("SLO ACTIVE");
             }else{
-                logger.info("SLO NOT ACTIVE");
+                //logger.info("SLO NOT ACTIVE");
             }
             boolean export = parameterList.contains("--export");
             if (export) {
@@ -107,6 +108,10 @@ public class Local {
             } else if (length > 0 && simulate) {
                 MongoDBAccess.saveLogWorkflowStart(Type.SIM, workflowContent, null, start);
                 result = simulator.simulateWorkflow(args[0], null, -1, start);
+            } else if (length > 1 && slo) {
+                //SLO Workflow-executor
+                MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
+                result = slos.executeWorkflow(args[0], args[1], -1, start);
             } else if (length > 1) {
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
                 result = executor.executeWorkflow(args[0], args[1], -1, start);

@@ -86,6 +86,11 @@ public class FunctionNode extends Node {
     private boolean success;
 
     /**
+     * Flag if function should be called as SLO
+     */
+    private boolean slo;
+
+    /**
      * Constructor for a function node.
      *
      * @param name        of the base function.
@@ -98,7 +103,7 @@ public class FunctionNode extends Node {
      * @param executionId for the logging of the execution.
      */
     public FunctionNode(String name, String type, String deployment, List<PropertyConstraint> properties,
-                        List<PropertyConstraint> constraints, List<DataIns> input, List<DataOutsAtomic> output, int executionId) {
+                        List<PropertyConstraint> constraints, List<DataIns> input, List<DataOutsAtomic> output, int executionId, boolean slo) {
         super(name, type);
         this.deployment = deployment;
         this.output = output;
@@ -106,6 +111,7 @@ public class FunctionNode extends Node {
         this.constraints = constraints;
         this.input = input;
         this.executionId = executionId;
+        this.slo = slo;
         if (output == null) {
             this.output = new ArrayList<>();
         }
@@ -280,13 +286,38 @@ public class FunctionNode extends Node {
         String resultString = null;
         PairResult<String, Long> pairResult = null;
 
+        /* Check if function should be invoked with as SLO */
+        if(this.slo){
+            /* Invoke the function with SLO */
+            long start = System.currentTimeMillis();
+            pairResult = gateway.invokeFunction(resourceLink, functionInputs);
+            long end = System.currentTimeMillis();
+            resultString = pairResult.getResult();
+
+            //TODO: Implement SLO-Handler (scheduler should change the 'resourceLink')
+            logger.info("Function is NOT replaced (" + resourceLink + ")");
+
+            /*
+             * Read the actual function outputs by their key and store them in
+             * functionOutputs
+             */
+            success = getValuesParsed(resultString, functionOutputs);
+            Event event = null;
+            if (success) {
+                event = Event.FUNCTION_END;
+            } else {
+                event = Event.FUNCTION_FAILED;
+            }
+            MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), success, loopCounter, maxLoopCounter, start, Type.EXEC);
+            return pairResult;
+        }
+
         /* Check if function should be invoked with fault tolerance settings */
         if (functionToInvoke != null && (functionToInvoke.hasConstraintSet() || functionToInvoke.hasFTSet())) {
 
             /* Invoke the function with fault tolerance */
             FaultToleranceEngine ftEngine = null;
 
-            System.out.println("SLO HERE");
 
             if (getGoogleAccount() != null && getAzureAccount() != null && getIBMAccount() != null && getAWSAccount() != null) {
                 ftEngine = new FaultToleranceEngine(getGoogleAccount(), getAzureAccount(), getAWSAccount(), getIBMAccount());
