@@ -1,6 +1,7 @@
 package at.enactmentengine.serverless.main;
 
 import at.enactmentengine.serverless.Simulation.SimulationParameters;
+import at.enactmentengine.serverless.slo.DBhandler;
 import at.uibk.dps.cronjob.ManualUpdate;
 import at.uibk.dps.databases.MongoDBAccess;
 import at.uibk.dps.util.Type;
@@ -73,7 +74,6 @@ public class Local {
                     logger.error("When SLO is activated, no other parameters can be used!");
                     return;
                 }
-                //TODO: Set SLO as active
                 logger.info("SLO ACTIVE");
             }else{
                 //logger.info("SLO NOT ACTIVE");
@@ -110,6 +110,10 @@ public class Local {
                 result = simulator.simulateWorkflow(args[0], null, -1, start);
             } else if (length > 1 && slo) {
                 //SLO Workflow-executor
+                DBhandler dBhandler = new DBhandler("sloDatabase.properties");
+                dBhandler.connectDB();
+                dBhandler.getSLOs();
+                dBhandler.closeDB();
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
                 result = slos.executeWorkflow(args[0], args[1], -1, start);
             } else if (length > 1) {
