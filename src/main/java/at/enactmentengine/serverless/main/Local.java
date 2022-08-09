@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -69,14 +71,16 @@ public class Local {
                 }
             }
             boolean slo = parameterList.contains("--slo");
-            if(slo && !parameterList.contains("--export") && !parameterList.contains("--update") && !parameterList.contains("--simulate")){
-                if(parameterList.size() > 3){
+            if (slo && !parameterList.contains("--export") && !parameterList.contains("--update") && !parameterList.contains("--simulate")) {
+                if (parameterList.size() > 3) {
                     logger.error("When SLO is activated, no other parameters can be used!");
                     return;
                 }
+                if (!Files.exists(Path.of("mongoDatabase.properties"))) {
+                    logger.error("mongoDatabase.properties not found, but needed for SLO");
+                    return;
+                }
                 logger.info("SLO ACTIVE");
-            }else{
-                //logger.info("SLO NOT ACTIVE");
             }
             boolean export = parameterList.contains("--export");
             if (export) {
@@ -110,10 +114,10 @@ public class Local {
                 result = simulator.simulateWorkflow(args[0], null, -1, start);
             } else if (length > 1 && slo) {
                 //SLO Workflow-executor
-                DBhandler dBhandler = new DBhandler("sloDatabase.properties");
+                DBhandler dBhandler = DBhandler.getInstance();
+                dBhandler.init("sloDatabase.properties");
                 dBhandler.connectDB();
                 dBhandler.getSLOs();
-                dBhandler.closeDB();
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
                 result = slos.executeWorkflow(args[0], args[1], -1, start);
             } else if (length > 1) {
