@@ -10,10 +10,13 @@ public abstract class SLO<E> {
         private SloOperator operator;
         private String timeFrame;
 
+        private long timeFrameInMs;
+
         public SloEntry (E value, SloOperator operator, String timeFrame){
             this.value = value;
             this.operator = operator;
             this.timeFrame = timeFrame;
+            this.timeFrameInMs = parseStringToMs(timeFrame);
         }
 
         public E getValue() {
@@ -27,6 +30,39 @@ public abstract class SLO<E> {
         public String getTimeFrame() {
             return timeFrame;
         }
+
+        public long getTimeFrameInMs(){
+            return timeFrameInMs;
+        }
+
+        private long parseStringToMs(String s){
+            return parseStringToMsHelper(s.toLowerCase(), "w");
+        }
+
+        private long parseStringToMsHelper(String s, String currentSearch){
+            String[] splits = s.split(currentSearch);
+            String nextSearch = "w";
+            long multiplier = 604800000L;
+            switch (currentSearch){
+                case "w": nextSearch = "d"; break;
+                case "d": nextSearch = "h"; multiplier = 86400000L; break;
+                case "h": nextSearch = "m"; multiplier = 3600000L; break;
+                case "m": multiplier = 60000L; break;
+            }
+            long value = 0;
+            for (String a: splits){
+                if(!a.isEmpty()) {
+                    if (a.matches("^[0-9]+")) {
+                        value += multiplier * Long.parseLong(a);
+                    } else {
+                        value += parseStringToMsHelper(a.replace(" ", ""), nextSearch);
+                    }
+                }
+            }
+            return value;
+        }
+
+
     }
 
     private List<SloEntry> entries;
@@ -41,8 +77,21 @@ public abstract class SLO<E> {
         this.entries.add(new SloEntry(value, operator, "24h"));
     }
 
+    public SLO(SloOperator operator, E value, String timeFrame){
+        this.entries = new ArrayList<>();
+        this.entries.add(new SloEntry(value, operator, timeFrame));
+    }
+
     public List<SloEntry> getEntries(){
         return Collections.unmodifiableList(this.entries);
+    }
+
+    public void addEntry(SloOperator operator, E value, String timeFrame){
+        this.entries.add(new SloEntry(value, operator, timeFrame));
+    }
+
+    protected void setData(SloData data){
+        this.data = data;
     }
 
     public SloData getData() {

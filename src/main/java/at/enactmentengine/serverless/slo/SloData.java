@@ -1,8 +1,6 @@
 package at.enactmentengine.serverless.slo;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 //stores data for a single Slo through all functions
 public class SloData {
@@ -43,11 +41,12 @@ public class SloData {
     }
 
     private List<DataEntry> entries;
+    private Set<String> availableResourceLinks;
 
     public SloData(String name) {
         entries = new LinkedList<DataEntry>();
+        availableResourceLinks = new HashSet<>();
         init(name);
-
     }
 
     public void init(String name){
@@ -57,6 +56,15 @@ public class SloData {
     public void addEntry(int id, long rtt, long timeStamp, boolean success, String resourceLink){
         entries.add(new DataEntry(id, rtt, timeStamp, success, resourceLink));
     }
+
+    public void addResourceLink(String resourceLink){
+        this.availableResourceLinks.add(resourceLink);
+    }
+
+    public Set<String> getResourceLinks(){
+        return Collections.unmodifiableSet(this.availableResourceLinks);
+    }
+
     public List<DataEntry> getList(){
         return Collections.unmodifiableList(this.entries);
     }

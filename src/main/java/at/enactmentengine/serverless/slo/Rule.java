@@ -11,27 +11,40 @@ public class Rule {
     private String currentExecution;
 
     public Rule(SLO mainSlo, List<SLO> slos, String functionName, String startExecution){
-        this.mainSlo = mainSlo;
-        this.additionalSlos = new ArrayList<>(slos);
+        if(slos != null)
+            this.additionalSlos = new ArrayList<>(slos);
+        else
+            this.additionalSlos = null;
+
         this.data = new SloData(functionName);
+
         if(startExecution == null)
             this.currentExecution = resolve();
-         else
-             this.currentExecution = startExecution;
+        else
+            this.currentExecution = startExecution;
+
+        this.mainSlo = mainSlo;
+        mainSlo.setData(this.data);
+
     }
 
     public boolean check(){
         if (!this.mainSlo.isInAgreement()){
             return false;
         }
-        for (SLO additionalSlo : additionalSlos) {
-            if(!additionalSlo.isInAgreement()) return false;
-        }
+        if (this.additionalSlos != null)
+            for (SLO additionalSlo : additionalSlos) {
+                if(!additionalSlo.isInAgreement()) return false;
+            }
         return true;
     }
 
     public void addDataEntry(int id, long rtt, long timeStamp, boolean success, String resourceLink){
         this.data.addEntry(id, rtt, timeStamp, success, resourceLink);
+    }
+
+    public void addResourceEntry(String resource){
+        this.data.addResourceLink(resource);
     }
 
 
