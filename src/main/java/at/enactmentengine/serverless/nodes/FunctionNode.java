@@ -2,7 +2,7 @@ package at.enactmentengine.serverless.nodes;
 
 import at.enactmentengine.serverless.exception.MissingInputDataException;
 import at.enactmentengine.serverless.object.Utils;
-import at.enactmentengine.serverless.slo.DBhandler;
+import at.enactmentengine.serverless.slo.SLOhandler;
 import at.uibk.dps.*;
 import at.uibk.dps.afcl.functions.objects.DataIns;
 import at.uibk.dps.afcl.functions.objects.DataOutsAtomic;
@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -297,8 +295,8 @@ public class FunctionNode extends Node {
             resultString = pairResult.getResult();
 
             //TODO: Implement SLO-Handler (scheduler should change the 'resourceLink')
-            DBhandler handler = DBhandler.getInstance();
-            handler.printSLOs();
+            SLOhandler slohandler = SLOhandler.getInstance();
+            slohandler.getDbhandler().printSLOs();
             logger.info("Function is NOT replaced (" + resourceLink + ")");
 
             /*

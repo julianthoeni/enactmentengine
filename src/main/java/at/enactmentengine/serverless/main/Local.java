@@ -1,7 +1,7 @@
 package at.enactmentengine.serverless.main;
 
 import at.enactmentengine.serverless.Simulation.SimulationParameters;
-import at.enactmentengine.serverless.slo.DBhandler;
+import at.enactmentengine.serverless.slo.SLOhandler;
 import at.uibk.dps.cronjob.ManualUpdate;
 import at.uibk.dps.databases.MongoDBAccess;
 import at.uibk.dps.util.Type;
@@ -80,6 +80,10 @@ public class Local {
                     logger.error("mongoDatabase.properties not found, but needed for SLO");
                     return;
                 }
+                if (!Files.exists(Path.of("sloDatabase.properties"))) {
+                    logger.error("sloDatabase.properties not found, but needed for SLO");
+                    return;
+                }
                 logger.info("SLO ACTIVE");
             }
             boolean export = parameterList.contains("--export");
@@ -114,10 +118,11 @@ public class Local {
                 result = simulator.simulateWorkflow(args[0], null, -1, start);
             } else if (length > 1 && slo) {
                 //SLO Workflow-executor
-                DBhandler dBhandler = DBhandler.getInstance();
-                dBhandler.init("sloDatabase.properties");
-                dBhandler.connectDB();
-                dBhandler.getSLOs();
+                SLOhandler handler = SLOhandler.getInstance();
+                handler.init("sloDatabase.properties", "mongoDatabase.properties");
+                handler.getDbhandler().getSLOs();
+                handler.getMDBhandler().testMongoDB();
+
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
                 result = slos.executeWorkflow(args[0], args[1], -1, start);
             } else if (length > 1) {

@@ -5,12 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.sql.*;
 
-public final class DBhandler {
+public class DBhandler {
     private String hostname;
     private String port;
     private String username;
@@ -22,14 +21,7 @@ public final class DBhandler {
     private List<String> SLOs_name = new ArrayList<>();
     private List<String> SLOs_unit = new ArrayList<>();
 
-    private static DBhandler single_instance = null;
-
-
-    public DBhandler() {
-    }
-
-    public void init(String fileName) throws IOException {
-        if (!Files.exists(Path.of(fileName))) throw new IOException("sloDatabase.properties file does not exist");
+    public DBhandler(String fileName) throws IOException {
 
         Properties databaseProperties = new Properties();
         databaseProperties.load(new FileInputStream(fileName));
@@ -42,18 +34,16 @@ public final class DBhandler {
             throw new IOException("sloDatabase.properties not correct");
     }
 
-    public static DBhandler getInstance() {
-        if (single_instance == null) {
-            single_instance = new DBhandler();
-        }
-        return single_instance;
-    }
 
     public void connectDB() throws SQLException {
-        System.out.println("Connecting to slo-database (" + this.hostname + ":" + this.port + ") ...");
-        this.dbConnection = DriverManager.getConnection("jdbc:mariadb://" + this.hostname + "/", this.username, this.password);
-        this.statement = this.dbConnection.createStatement();
-        System.out.println("Successfully");
+        try {
+            System.out.println("Connecting to slo-database (" + this.hostname + ":" + this.port + ") ...");
+            this.dbConnection = DriverManager.getConnection("jdbc:mariadb://" + this.hostname + "/", this.username, this.password);
+            this.statement = this.dbConnection.createStatement();
+            System.out.println("Successfully");
+        } catch (SQLException e) {
+            throw new SQLException("DB-Connection failed ...");
+        }
     }
 
     public void closeDB() throws SQLException {
@@ -61,7 +51,7 @@ public final class DBhandler {
         System.out.println("Disconnected from slo-database");
     }
 
-    public void getSLOs() {
+    public void getSLOs() throws SQLException {
         try {
             String query = "SELECT * FROM afcl.slo";
             ResultSet result = this.statement.executeQuery(query);
@@ -71,7 +61,7 @@ public final class DBhandler {
                 this.SLOs_unit.add(result.getString("unit"));
             }
         } catch (SQLException e) {
-            System.out.println("Getting SLO-Data from DB failed ...");
+            throw new SQLException("DB-Connection failed ...");
         }
     }
 
@@ -80,5 +70,4 @@ public final class DBhandler {
         System.out.println(this.SLOs_name);
         System.out.println(this.SLOs_unit);
     }
-
 }
