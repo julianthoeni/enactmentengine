@@ -120,9 +120,6 @@ public class Local {
                 //SLO Workflow-executor
                 SLOhandler handler = SLOhandler.getInstance();
                 handler.init("sloDatabase.properties", "mongoDatabase.properties");
-                handler.getDbhandler().getSLOs();
-                handler.getMDBhandler().testMongoDB();
-
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
                 result = slos.executeWorkflow(args[0], args[1], -1, start);
             } else if (length > 1) {

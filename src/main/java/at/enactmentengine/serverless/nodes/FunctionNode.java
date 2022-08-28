@@ -16,12 +16,19 @@ import at.uibk.dps.function.Function;
 //import at.uibk.dps.socketutils.entity.Invocation;
 import at.uibk.dps.util.Event;
 import at.uibk.dps.util.Type;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+import io.netty.handler.codec.json.JsonObjectDecoder;
 import jFaaS.Gateway;
 import jFaaS.utils.PairResult;
+import org.glassfish.hk2.utilities.ImmediateErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.Null;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
@@ -288,17 +295,15 @@ public class FunctionNode extends Node {
 
         /* Check if function should be invoked with as SLO */
         if (this.slo) {
+            //TODO: Implement SLO-Handler (scheduler should change the 'resourceLink')
+            //SLOhandler slohandler = SLOhandler.getInstance();
+            //slohandler.getDbhandler().printSLOs();
+            logger.info("Function is NOT replaced (" + resourceLink + ")");
             /* Invoke the function with SLO */
             long start = System.currentTimeMillis();
             pairResult = gateway.invokeFunction(resourceLink, functionInputs);
             long end = System.currentTimeMillis();
             resultString = pairResult.getResult();
-
-            //TODO: Implement SLO-Handler (scheduler should change the 'resourceLink')
-            SLOhandler slohandler = SLOhandler.getInstance();
-            slohandler.getDbhandler().printSLOs();
-            logger.info("Function is NOT replaced (" + resourceLink + ")");
-
             /*
              * Read the actual function outputs by their key and store them in
              * functionOutputs
@@ -310,7 +315,30 @@ public class FunctionNode extends Node {
             } else {
                 event = Event.FUNCTION_FAILED;
             }
-            MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), success, loopCounter, maxLoopCounter, start, Type.EXEC);
+            JsonObject json = JsonParser.parseString(resultString).getAsJsonObject();
+            if(json.get("memory")!=null){
+                int memory = Integer.parseInt((json.get("memory")).toString().replace("\"",""));
+                System.out.println("Memory: "+memory+"MB");
+            }else{
+                logger.warn("Function does not return memory. The memory of an older invocation is used as reference");
+                //TODO: Get memory_limit_in_mb from previous invocation. If there is no previous invocation, dont charge anything
+            }
+            if(json.get("function_duration")!=null){
+                int function_duration = Integer.parseInt((json.get("function_duration")).toString());
+                System.out.println("Duration "+function_duration+"ms");
+            }else{
+                logger.warn("Function does not return duration. The max-duration of an older invocation is used as reference");
+                //TODO: Get memory_limit_in_mb from previous invocation. If there is no previous invocation, dont charge anything
+            }
+            if(json.get("timeout")!=null){
+                int timeout = Integer.parseInt((json.get("timeout")).toString());
+                System.out.println("Timeout: "+timeout+"ms");
+            }else{
+                logger.warn("Function does not return timeout");
+            }
+            //TODO: Call function which calculates the cost
+            double calculated_cost = 0.0D;
+            MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(),calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
             return pairResult;
         }
 

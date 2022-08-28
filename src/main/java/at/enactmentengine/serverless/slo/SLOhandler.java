@@ -25,6 +25,11 @@ public final class SLOhandler {
 
         this.mdbhandler = new MoDBhandler(filenameMdb);
         this.mdbhandler.init();
+
+        this.dbhandler.getSLOs();
+        this.mdbhandler.testMongoDB();
+        //System.out.println(this.mdbhandler.getFunctionAvgRTTinPeriod("arn:aws:lambda:us-east-1:468730259750:function:xwf01_convertValues", 30000000L));
+        //System.out.println(this.mdbhandler.getFunctionSuccessRateInPeriod("arn:aws:lambda:us-east-1:468730259750:function:xwf01_convertValues", 30000000L));
     }
 
     public DBhandler getDbhandler() {

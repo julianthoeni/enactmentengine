@@ -53,6 +53,7 @@ public class DBhandler {
 
     public void getSLOs() throws SQLException {
         try {
+            //TODO: Save the SLOs from the DB to the local SLO-Object
             String query = "SELECT * FROM afcl.slo";
             ResultSet result = this.statement.executeQuery(query);
             while (result.next()) {
