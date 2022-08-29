@@ -41,9 +41,14 @@ public class MoDBhandler {
     }
 
     public void init() {
-        this.client = MongoClients.create("mongodb://" + this.hostname + ":" + this.port);
-        this.mongodatabase = client.getDatabase(this.database);
-        this.mongoCollection = this.mongodatabase.getCollection(this.collection);
+        try{
+            this.client = MongoClients.create("mongodb://" + this.hostname + ":" + this.port);
+            this.mongodatabase = client.getDatabase(this.database);
+            this.mongoCollection = this.mongodatabase.getCollection(this.collection);
+        }catch (Exception e){
+            System.out.println("Connection to MongoDB (" + this.hostname + ":" + this.port + ") failed");
+            throw e;
+        }
     }
 
     public void testMongoDB() {

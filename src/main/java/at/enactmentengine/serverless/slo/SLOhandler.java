@@ -1,5 +1,6 @@
 package at.enactmentengine.serverless.slo;
 
+import at.enactmentengine.serverless.slo.cost.CostHandler;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -8,6 +9,7 @@ public final class SLOhandler {
 
     private DBhandler dbhandler;
     private MoDBhandler mdbhandler;
+    private CostHandler costHandler;
 
     public void SLOhandler() {
     }
@@ -26,10 +28,10 @@ public final class SLOhandler {
         this.mdbhandler = new MoDBhandler(filenameMdb);
         this.mdbhandler.init();
 
+        this.costHandler = new CostHandler();
+        this.costHandler.addEntries(dbhandler.getLambdaPricing());
         this.dbhandler.getSLOs();
         this.mdbhandler.testMongoDB();
-        //System.out.println(this.mdbhandler.getFunctionAvgRTTinPeriod("arn:aws:lambda:us-east-1:468730259750:function:xwf01_convertValues", 30000000L));
-        //System.out.println(this.mdbhandler.getFunctionSuccessRateInPeriod("arn:aws:lambda:us-east-1:468730259750:function:xwf01_convertValues", 30000000L));
     }
 
     public DBhandler getDbhandler() {
@@ -39,5 +41,7 @@ public final class SLOhandler {
     public MoDBhandler getMDBhandler() {
         return this.mdbhandler;
     }
+
+    public CostHandler getCostHandler(){ return this.costHandler; }
 
 }

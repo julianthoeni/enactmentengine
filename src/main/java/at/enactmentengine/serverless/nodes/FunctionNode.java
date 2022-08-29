@@ -295,9 +295,8 @@ public class FunctionNode extends Node {
 
         /* Check if function should be invoked with as SLO */
         if (this.slo) {
+            SLOhandler slohandler = SLOhandler.getInstance();
             //TODO: Implement SLO-Handler (scheduler should change the 'resourceLink')
-            //SLOhandler slohandler = SLOhandler.getInstance();
-            //slohandler.getDbhandler().printSLOs();
             logger.info("Function is NOT replaced (" + resourceLink + ")");
             /* Invoke the function with SLO */
             long start = System.currentTimeMillis();
@@ -315,30 +314,45 @@ public class FunctionNode extends Node {
             } else {
                 event = Event.FUNCTION_FAILED;
             }
+            /*
+             * Read additional values from the returned json (memory-limit in MB,
+             *  function-duration in ms, max function-duration in ms)
+             * If the function does not return a value, an value of a pervious invocation will be used.
+             * If no previous invocation has taken place, nothing (cost=0) will be charged.
+             */
             JsonObject json = JsonParser.parseString(resultString).getAsJsonObject();
+            int function_memory = 0;
+            int function_duration = 0;
+            int function_timeout = 0;
+            float calculated_cost = 0f;
+
             if(json.get("memory")!=null){
-                int memory = Integer.parseInt((json.get("memory")).toString().replace("\"",""));
-                System.out.println("Memory: "+memory+"MB");
+                function_memory = Integer.parseInt((json.get("memory")).toString().replace("\"",""));
+                System.out.println("Memory: "+function_memory+"MB");
             }else{
-                logger.warn("Function does not return memory. The memory of an older invocation is used as reference");
+                logger.warn("Function does not return function_memory. The function_memory of an older invocation is used as reference");
                 //TODO: Get memory_limit_in_mb from previous invocation. If there is no previous invocation, dont charge anything
             }
             if(json.get("function_duration")!=null){
-                int function_duration = Integer.parseInt((json.get("function_duration")).toString());
+                function_duration = Integer.parseInt((json.get("function_duration")).toString());
                 System.out.println("Duration "+function_duration+"ms");
             }else{
                 logger.warn("Function does not return duration. The max-duration of an older invocation is used as reference");
                 //TODO: Get memory_limit_in_mb from previous invocation. If there is no previous invocation, dont charge anything
             }
             if(json.get("timeout")!=null){
-                int timeout = Integer.parseInt((json.get("timeout")).toString());
-                System.out.println("Timeout: "+timeout+"ms");
+                function_timeout = Integer.parseInt((json.get("timeout")).toString());
+                System.out.println("Timeout: "+function_timeout+"ms");
             }else{
-                logger.warn("Function does not return timeout");
+                logger.warn("Function does not return function_timeout");
             }
-            //TODO: Call function which calculates the cost
-            double calculated_cost = 0.0D;
-            MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(),calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
+
+            //calculate total cost of function-invocation
+            String regionCode = slohandler.getCostHandler().getRegionCodeFromARN(resourceLink);
+            calculated_cost = slohandler.getCostHandler().getPricingFromRegion(regionCode,function_duration,function_memory);
+            System.out.println("Cost: " + calculated_cost);
+
+            MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
             return pairResult;
         }
 

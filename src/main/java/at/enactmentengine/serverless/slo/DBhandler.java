@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
 import java.sql.*;
@@ -70,5 +71,21 @@ public class DBhandler {
         System.out.println(this.SLOs_id);
         System.out.println(this.SLOs_name);
         System.out.println(this.SLOs_unit);
+    }
+
+    public LinkedHashMap<String, Float> getLambdaPricing(){
+        LinkedHashMap<String, Float> pricingList = new LinkedHashMap<>();
+        try{
+            String query = "SELECT * FROM afcl.regionPricing";
+            ResultSet result = this.statement.executeQuery(query);
+            while (result.next()) {
+                String code = result.getString("code");
+                float price = result.getFloat("pricePerGBsecond");
+                pricingList.put(code, price);
+            }
+        }catch (SQLException e) {
+            System.out.println("Receiving LambdaPricing failed - " + e);
+        }
+        return pricingList;
     }
 }
