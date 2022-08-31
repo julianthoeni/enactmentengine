@@ -8,15 +8,17 @@ public class SloData {
         private int id;
         private long rtt;
         private long timestamp;
+        private double cost;
         private boolean success;
         private String resourceLink;
 
-        public DataEntry(int id, long rtt, long timeStamp, boolean success, String resourceLink){
+        public DataEntry(int id, long rtt, long timeStamp, double cost, boolean success, String resourceLink){
             this.id = id;
             this.rtt = rtt;
             this.timestamp = timeStamp;
             this.success = success;
             this.resourceLink = resourceLink;
+            this.cost = cost;
         }
 
         public int getId() {
@@ -29,6 +31,10 @@ public class SloData {
 
         public long getTimestamp() {
             return timestamp;
+        }
+
+        public double getCost() {
+            return cost;
         }
 
         public boolean isSuccess() {
@@ -53,8 +59,8 @@ public class SloData {
         //do some database magic here
     }
 
-    public void addEntry(int id, long rtt, long timeStamp, boolean success, String resourceLink){
-        entries.add(new DataEntry(id, rtt, timeStamp, success, resourceLink));
+    public void addEntry(int id, long rtt, long timeStamp, double cost, boolean success, String resourceLink){
+        entries.add(new DataEntry(id, rtt, timeStamp, cost, success, resourceLink));
     }
 
     public void addResourceLink(String resourceLink){

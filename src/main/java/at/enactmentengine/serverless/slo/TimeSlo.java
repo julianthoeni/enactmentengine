@@ -40,7 +40,7 @@ public class TimeSlo extends SLO<Double>{
                 case EQUALS: if (!(averageRtt == (Double) s.getValue())){
                     return false;
                 } break;
-                case RANGE: return false;
+                case RANGE: return false; // TODO: implement range for TimeSLO
             }
         }
 
