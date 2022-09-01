@@ -52,16 +52,21 @@ public class DBhandler {
         System.out.println("Disconnected from slo-database");
     }
 
-    public void getSLOs() throws SQLException {
+    public ResultSet getSLOs() throws SQLException {
         try {
-            //TODO: Save the SLOs from the DB to the local SLO-Object
-            String query = "SELECT * FROM afcl.slo";
+            String query = "SELECT * FROM afcl.rule LEFT JOIN afcl.slo on afcl.rule.sloid=afcl.slo.sloid";
             ResultSet result = this.statement.executeQuery(query);
-            while (result.next()) {
-                this.SLOs_id.add(Integer.valueOf(result.getString("sloid")));
-                this.SLOs_name.add(result.getString("name"));
-                this.SLOs_unit.add(result.getString("unit"));
-            }
+            return result;
+        } catch (SQLException e) {
+            throw new SQLException("DB-Connection failed ...");
+        }
+    }
+
+    public ResultSet getSloPeriods() throws SQLException{
+        try {
+            String query = "SELECT * FROM afcl.sloperiod";
+            ResultSet result = this.statement.executeQuery(query);
+            return result;
         } catch (SQLException e) {
             throw new SQLException("DB-Connection failed ...");
         }

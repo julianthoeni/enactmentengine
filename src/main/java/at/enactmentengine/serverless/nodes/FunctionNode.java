@@ -324,7 +324,7 @@ public class FunctionNode extends Node {
             int function_memory = 0;
             int function_duration = 0;
             int function_timeout = 0;
-            float calculated_cost = 0f;
+            double calculated_cost = 0;
 
             if(json.get("memory")!=null){
                 function_memory = Integer.parseInt((json.get("memory")).toString().replace("\"",""));
