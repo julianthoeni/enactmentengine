@@ -3,6 +3,8 @@ package at.enactmentengine.serverless.slo;
 import at.enactmentengine.serverless.slo.cost.CostHandler;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 
 public final class SLOhandler {
     private static SLOhandler SLOhandler_instance = null;
@@ -10,6 +12,8 @@ public final class SLOhandler {
     private DBhandler dbhandler;
     private MoDBhandler mdbhandler;
     private CostHandler costHandler;
+    private String yamlFile;
+    private List<String> functionsInYaml;
 
     public void SLOhandler() {
     }
@@ -21,7 +25,7 @@ public final class SLOhandler {
         return SLOhandler_instance;
     }
 
-    public void init(String filenameSLOdb, String filenameMdb) throws IOException, SQLException {
+    public void init(String filenameSLOdb, String filenameMdb, String yamlFile) throws Exception,IOException, SQLException {
         this.dbhandler = new DBhandler(filenameSLOdb);
         this.dbhandler.connectDB();
 
@@ -30,8 +34,15 @@ public final class SLOhandler {
 
         this.costHandler = new CostHandler();
         this.costHandler.addEntries(dbhandler.getLambdaPricing());
-        this.dbhandler.getSLOs();
-        this.mdbhandler.testMongoDB();
+
+        this.yamlFile = yamlFile;
+
+        Map<String, Rule> wau = RuleFactory.create(this.dbhandler.getSLOs(),this.dbhandler.getSloPeriods());
+
+
+        YamlFunctionExtractor yaml = new YamlFunctionExtractor(this.yamlFile);
+        this.functionsInYaml = yaml.getFunctions();
+        System.out.println(this.functionsInYaml);
     }
 
     public DBhandler getDbhandler() {

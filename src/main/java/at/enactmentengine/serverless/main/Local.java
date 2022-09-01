@@ -119,7 +119,8 @@ public class Local {
             } else if (length > 1 && slo) {
                 //SLO Workflow-executor
                 SLOhandler handler = SLOhandler.getInstance();
-                handler.init("sloDatabase.properties", "mongoDatabase.properties");
+                String yamlFile = args[0];
+                handler.init("sloDatabase.properties", "mongoDatabase.properties", yamlFile);
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
                 result = slos.executeWorkflow(args[0], args[1], -1, start);
             } else if (length > 1) {
