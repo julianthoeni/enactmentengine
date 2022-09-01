@@ -2,10 +2,7 @@ package at.enactmentengine.serverless.slo;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RuleFactory {
 
@@ -14,26 +11,59 @@ public class RuleFactory {
         public String constraintType;
         public String unit;
         public double successRate;
+
         SloTempObject(int sloId, String constraintType, String unit, double successRate){
             this.sloId = sloId;
             this.constraintType = constraintType;
             this.unit = unit;
             this.successRate = successRate;
         }
+
+        @Override
+        public String toString() {
+            return "SloTempObject{" +
+                    "sloId=" + sloId +
+                    ", constraintType='" + constraintType + '\'' +
+                    ", unit='" + unit + '\'' +
+                    ", successRate=" + successRate +
+                    '}';
+        }
     }
 
-    public static List<Rule> create(ResultSet sloSqlData){
-        List<Rule> rules = new LinkedList<>();
+    private static class SloSettingsObject{
+        public String value;
+        public SloOperator operator;
+        public String period;
+
+        SloSettingsObject(String value, SloOperator operator, String period){
+            this.value = value;
+            this.operator = operator;
+            this.period = period;
+        }
+
+        @Override
+        public String toString() {
+            return "SloSettingsObject{" +
+                    "value='" + value + '\'' +
+                    ", operator=" + operator +
+                    ", period='" + period + '\'' +
+                    '}';
+        }
+    }
+
+    public static Map<String, Rule> create(ResultSet ruleData, ResultSet sloPeriod) throws Exception{
+        Map<String, Rule> rules = new HashMap<>();
         Map<String, List<SloTempObject>> ruleSlos = new HashMap<>();
+        Map<Integer, List<SloSettingsObject>> sloTimePeriodMap = new HashMap<>();
 
         while (true){
             try {
-                if (!sloSqlData.next()) break;
-                String functionName = sloSqlData.getString("functiontype");
-                Integer sloId = sloSqlData.getInt("sloid");
-                String constraintType = sloSqlData.getString("constraintType");
-                String unit = sloSqlData.getString("unit");
-                Double successRate = sloSqlData.getDouble("successRate");
+                if (!ruleData.next()) break;
+                String functionName = ruleData.getString("functiontype");
+                int sloId = ruleData.getInt("sloid");
+                String constraintType = ruleData.getString("constraintType");
+                String unit = ruleData.getString("unit");
+                double successRate = ruleData.getDouble("successRate");
 
                 List<SloTempObject> slos = ruleSlos.getOrDefault(functionName, new LinkedList<>());
                 slos.add(new SloTempObject(sloId, constraintType, unit, successRate));
@@ -44,6 +74,74 @@ public class RuleFactory {
             }
         }
 
+        while (true){ // comment this section if not prepared yet
+            try {
+                if (!sloPeriod.next()) break;
+                String value = sloPeriod.getString("value");
+                String operatorString = sloPeriod.getString("operator");
+                String period = sloPeriod.getString("period");
+                int sloid = sloPeriod.getInt("sloid");
+
+                SloOperator operator = SloOperator.getOperator(operatorString);
+
+                List<SloSettingsObject> settings = sloTimePeriodMap.getOrDefault(sloid, new LinkedList<>());
+                settings.add(new SloSettingsObject(value, operator, period));
+                sloTimePeriodMap.put(sloid, settings);
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        for (String r : ruleSlos.keySet()){
+            // TODO: use data from slo_period table
+            List<SloTempObject> data = ruleSlos.get(r);
+            SLO mainSlo = null;
+            List<SLO> additionalSlos = new ArrayList<>();
+
+            for (SloTempObject entry : data){
+                SLO temp = null;
+                List<SloSettingsObject> settings = sloTimePeriodMap.get(entry.sloId);
+                // TODO: sort settings list from smallest time frame (first) to highest (last)
+
+                for (SloSettingsObject singleSloSetting : settings) {
+                    if (temp != null){
+                        temp.addEntry(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                    }
+                    else if(temp == null) {
+                        switch (entry.unit) { // temp data TODO: add first entry from list, and remove from list
+                            case "$":
+                                temp = new CostSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                break;
+                            case "%":
+                                temp = new SuccessRateSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                break;
+                            case "s": // why is language level 8?
+                            case "h":
+                            case "ms":
+                                temp = new TimeSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                break;
+                            default:
+                                throw new IllegalStateException("Unexpected value: " + entry.unit);
+                        }
+                    }
+                }
+
+                if(temp == null){
+                    throw new Exception("Failure declaring SLO (how did you get this?)");
+                }
+
+                switch(entry.constraintType){
+                    case "constraint": mainSlo = temp; break;
+                    case "objective": additionalSlos.add(temp); break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + entry.constraintType);
+                }
+            }
+
+            if (mainSlo == null) throw new Exception("No main SLO defined for " + r);
+            rules.put(r, new Rule(mainSlo, additionalSlos, r, r)); // TODO: set standard execution (last "r")
+
+        }
 
         return rules;
     }
