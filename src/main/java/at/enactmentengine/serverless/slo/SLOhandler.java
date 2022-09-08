@@ -14,6 +14,7 @@ public final class SLOhandler {
     private CostHandler costHandler;
     private String yamlFile;
     private List<String> functionsInYaml;
+    private Map<String, Rule> ruleMap;
 
     public void SLOhandler() {
     }
@@ -26,23 +27,29 @@ public final class SLOhandler {
     }
 
     public void init(String filenameSLOdb, String filenameMdb, String yamlFile) throws Exception,IOException, SQLException {
+        this.yamlFile = yamlFile;
+
+        //Create dbhandler-instance and connect to MariaDB
         this.dbhandler = new DBhandler(filenameSLOdb);
         this.dbhandler.connectDB();
 
+        //Create MongoDB-instance and connect to MongoDB
         this.mdbhandler = new MoDBhandler(filenameMdb);
         this.mdbhandler.init();
 
+        //Create local costHandler (calculator) and load current cost-models from MariaDB
         this.costHandler = new CostHandler();
         this.costHandler.addEntries(dbhandler.getLambdaPricing());
 
-        this.yamlFile = yamlFile;
-
-        Map<String, Rule> wau = RuleFactory.create(this.dbhandler.getSLOs(),this.dbhandler.getSloPeriods());
-
-
+        //Extract all needed function-names from the YAML-File
         YamlFunctionExtractor yaml = new YamlFunctionExtractor(this.yamlFile);
         this.functionsInYaml = yaml.getFunctions();
-        System.out.println(this.functionsInYaml);
+
+        //Create a map of all rules and fill them with previous data from the mongoDB
+        this.ruleMap = RuleFactory.create(this.dbhandler.getSLOs(),this.dbhandler.getSloPeriods());
+        for(String functionName : this.functionsInYaml){
+            this.mdbhandler.addEntriesToRule(functionName, this.ruleMap.get(functionName));
+        }
     }
 
     public DBhandler getDbhandler() {

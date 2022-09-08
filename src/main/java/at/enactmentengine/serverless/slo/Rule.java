@@ -39,8 +39,8 @@ public class Rule {
         return true;
     }
 
-    public void addDataEntry(int id, long rtt, long timeStamp, double cost, boolean success, String resourceLink){
-        this.data.addEntry(id, rtt, timeStamp, cost, success, resourceLink);
+    public void addDataEntry(long rtt, long timeStamp, double cost, boolean success, String resourceLink){
+        this.data.addEntry(this.data.getList().size(), rtt, timeStamp, cost, success, resourceLink);
     }
 
     public void addResourceEntry(String resource){

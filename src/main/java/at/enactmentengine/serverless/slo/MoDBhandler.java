@@ -7,6 +7,8 @@ import org.bson.conversions.Bson;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
@@ -96,5 +98,14 @@ public class MoDBhandler {
     public double getFunctionTotalCostInPeriod(String arn, long period){
         //Todo: Implement function callculation for a function
         return 0;
+    }
+
+    public void addEntriesToRule(String functionName, Rule rule) throws ParseException {
+        Bson equalComparison = lte("functionName", functionName);
+        for (Document doc : this.mongoCollection.find(equalComparison)) {
+            SimpleDateFormat dateFormater = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzzz yyyy");
+            long date = dateFormater.parse(doc.get("startTime").toString()).getTime();
+            rule.addDataEntry((long) doc.get("RTT"),date,(double) doc.get("cost"),(boolean) doc.get("success"),doc.get("function_id").toString());
+        }
     }
 }
