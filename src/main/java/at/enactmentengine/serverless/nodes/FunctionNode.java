@@ -350,8 +350,11 @@ public class FunctionNode extends Node {
             //calculate total cost of function-invocation
             String regionCode = slohandler.getCostHandler().getRegionCodeFromARN(resourceLink);
             calculated_cost = slohandler.getCostHandler().getPricingFromRegion(regionCode,function_duration,function_memory);
-            System.out.println("Cost: " + calculated_cost);
 
+            //Save to local ruleMap
+            slohandler.addEntryToRule(name, pairResult.getRTT(), start, calculated_cost, success, resourceLink);
+
+            //Save to mongodb
             MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
             return pairResult;
         }

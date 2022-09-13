@@ -62,4 +62,8 @@ public final class SLOhandler {
 
     public CostHandler getCostHandler(){ return this.costHandler; }
 
+    public void addEntryToRule(String functionName, long rtt, long timestemp, double cost, boolean success, String resourceLink){
+        this.ruleMap.get(functionName).addDataEntry(rtt, timestemp, cost, success, resourceLink);
+    }
+
 }
