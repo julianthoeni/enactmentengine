@@ -2,6 +2,7 @@ package at.enactmentengine.serverless.nodes;
 
 import at.enactmentengine.serverless.exception.MissingInputDataException;
 import at.enactmentengine.serverless.object.Utils;
+import at.enactmentengine.serverless.slo.FunctionScheduler;
 import at.enactmentengine.serverless.slo.SLOhandler;
 import at.uibk.dps.*;
 import at.uibk.dps.afcl.functions.objects.DataIns;
@@ -293,11 +294,13 @@ public class FunctionNode extends Node {
         String resultString = null;
         PairResult<String, Long> pairResult = null;
 
-        /* Check if function should be invoked with as SLO */
+        /* Check if function should be invoked with SLO */
         if (this.slo) {
             SLOhandler slohandler = SLOhandler.getInstance();
+
             //TODO: Implement SLO-Handler (scheduler should change the 'resourceLink')
-            logger.info("Function is NOT replaced (" + resourceLink + ")");
+            System.out.println(name);
+            //System.out.println(slohandler.getRuleMap().get(name).toString());
             /* Invoke the function with SLO */
             long start = System.currentTimeMillis();
             pairResult = gateway.invokeFunction(resourceLink, functionInputs);
@@ -316,9 +319,9 @@ public class FunctionNode extends Node {
             }
             /*
              * Read additional values from the returned json (memory-limit in MB,
-             *  function-duration in ms, max function-duration in ms)
-             * If the function does not return a value, an value of a pervious invocation will be used.
-             * If no previous invocation has taken place, nothing (cost=0) will be charged.
+             * function-duration in ms, max function-duration in ms).
+             * If the function does not return a value, nothing (cost=0) will be charged
+             * and no entry will be logged.
              */
             JsonObject json = JsonParser.parseString(resultString).getAsJsonObject();
             int function_memory = 0;
@@ -326,31 +329,23 @@ public class FunctionNode extends Node {
             int function_timeout = 0;
             double calculated_cost = 0;
 
-            if(json.get("memory")!=null){
+            if(json.get("memory")!=null || json.get("function_duration")!=null || json.get("timeout")!=null){
                 function_memory = Integer.parseInt((json.get("memory")).toString().replace("\"",""));
-                System.out.println("Memory: "+function_memory+"MB");
-            }else{
-                logger.warn("Function does not return function_memory. The function_memory of an older invocation is used as reference");
-                //TODO: Get memory_limit_in_mb from previous invocation. If there is no previous invocation, dont charge anything
-            }
-            if(json.get("function_duration")!=null){
                 function_duration = Integer.parseInt((json.get("function_duration")).toString());
-                System.out.println("Duration "+function_duration+"ms");
-            }else{
-                logger.warn("Function does not return duration. The max-duration of an older invocation is used as reference");
-                //TODO: Get memory_limit_in_mb from previous invocation. If there is no previous invocation, dont charge anything
-            }
-            if(json.get("timeout")!=null){
+                if(function_duration == 0) function_duration = 1;
                 function_timeout = Integer.parseInt((json.get("timeout")).toString());
+                System.out.println("Memory: "+function_memory+"MB");
+                System.out.println("Duration "+function_duration+"ms");
                 System.out.println("Timeout: "+function_timeout+"ms");
             }else{
-                logger.warn("Function does not return function_timeout");
+                logger.warn("Function does not return information about memory, duration or timeout");
+                //TODO: What should be done in this case? Charge nothing and don't add entry to ruleMap and MongoDB?
             }
 
             //calculate total cost of function-invocation
             String regionCode = slohandler.getCostHandler().getRegionCodeFromARN(resourceLink);
             calculated_cost = slohandler.getCostHandler().getPricingFromRegion(regionCode,function_duration,function_memory);
-
+            System.out.println("CalculatedCost: " + calculated_cost);
             //Save to local ruleMap
             slohandler.addEntryToRule(name, pairResult.getRTT(), start, calculated_cost, success, resourceLink);
 

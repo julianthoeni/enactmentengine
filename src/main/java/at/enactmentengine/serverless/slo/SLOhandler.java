@@ -3,6 +3,7 @@ package at.enactmentengine.serverless.slo;
 import at.enactmentengine.serverless.slo.cost.CostHandler;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +65,10 @@ public final class SLOhandler {
 
     public void addEntryToRule(String functionName, long rtt, long timestemp, double cost, boolean success, String resourceLink){
         this.ruleMap.get(functionName).addDataEntry(rtt, timestemp, cost, success, resourceLink);
+    }
+
+    public Map<String, Rule> getRuleMap(){
+        return Collections.unmodifiableMap(this.ruleMap);
     }
 
 }
