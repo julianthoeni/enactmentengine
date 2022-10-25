@@ -2,6 +2,7 @@ package at.enactmentengine.serverless.slo;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class CostSlo extends SLO<Double>{
 
@@ -47,4 +48,10 @@ public class CostSlo extends SLO<Double>{
 
         return true;
     }
+
+    @Override
+    protected Map<String, Double> getPoints() {
+        return null;
+    }
+
 }

@@ -1,7 +1,9 @@
 package at.enactmentengine.serverless.slo;
 
-import java.util.Arrays;
-import java.util.List;
+import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TimeSlo extends SLO<Double>{
 
@@ -46,5 +48,42 @@ public class TimeSlo extends SLO<Double>{
 
 
         return true;
+    }
+
+    @Override
+    protected Map<String, Double> getPoints() {
+        Map<String, Double> res = new HashMap<>();
+        Map<String, List<SloData.DataEntry>> dataByResourceLink = this.getDataByResourceLink();
+        List<String> allResourceLinks = new LinkedList<>(this.getData().getResourceLinks());
+
+        long timestamp = System.currentTimeMillis();
+
+        for(String resourceLink : dataByResourceLink.keySet()){
+            if (!allResourceLinks.contains(resourceLink)) {
+                // throw exception here?
+            }
+            allResourceLinks.remove(resourceLink); // remove from list -> list should only contain non executed resources at end
+
+            double val = 0d;
+
+            for (SloEntry slo : this.getEntries()){
+                double average = getAverageRtt(timestamp, slo.getTimeFrameInMs(), new ArrayList<>(Arrays.asList(resourceLink)));
+                if (average / (Double) slo.getValue() >= 1){
+                    val += 1;
+                } else {
+                    val += average / (Double) slo.getValue();
+                }
+            }
+
+            res.put(resourceLink, val);
+        }
+
+        if(allResourceLinks.size() > 0){
+            for(String resourceLink : allResourceLinks){
+                res.put(resourceLink, 0d);
+            }
+        }
+
+        return Collections.unmodifiableMap(res);
     }
 }

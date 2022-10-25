@@ -3,6 +3,8 @@ package at.enactmentengine.serverless.slo;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class SLO<E> {
     protected class SloEntry<E>{
@@ -71,6 +73,18 @@ public abstract class SLO<E> {
 
 
     public abstract boolean isInAgreement();
+
+    protected abstract Map<String, Double> getPoints();
+
+    protected Map<String, List<SloData.DataEntry>> getDataByResourceLink(){
+        List<SloData.DataEntry> entries = this.getData().getList();
+
+        // group by resourcelinks:
+        Map<String, List<SloData.DataEntry>> dataByResource =
+                entries.stream().collect(Collectors.groupingBy(elem -> elem.getResourceLink()));
+
+        return dataByResource;
+    }
 
     public SLO(SloOperator operator, E value){
         this.entries = new ArrayList<>();
