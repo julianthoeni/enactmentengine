@@ -24,7 +24,7 @@ public class TimeSlo extends SLO<Double>{
         // create timestamp:
         long timestamp = System.currentTimeMillis();
         for (SloEntry s : this.getEntries()){
-            double averageRtt = getAverageRtt(timestamp, s.getTimeFrameInMs(), Arrays.asList("start"));
+            double averageRtt = getAverageRtt(timestamp, s.getTimeFrameInMs(), Arrays.asList("Test"));
             System.out.println(averageRtt);
             switch(s.getOperator()){
                 case LESS_THAN: if (!(averageRtt < (Double) s.getValue())){

@@ -4,6 +4,7 @@ import at.enactmentengine.serverless.slo.cost.CostHandler;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,8 +15,9 @@ public final class SLOhandler {
     private MoDBhandler mdbhandler;
     private CostHandler costHandler;
     private String yamlFile;
-    private List<String> functionsInYaml;
+    private List<String> functionName;
     private Map<String, Rule> ruleMap;
+    public HashMap<String, FunctionARNs> functions = new HashMap<>();
 
     public void SLOhandler() {
     }
@@ -44,11 +46,12 @@ public final class SLOhandler {
 
         //Extract all needed function-names from the YAML-File
         YamlFunctionExtractor yaml = new YamlFunctionExtractor(this.yamlFile);
-        this.functionsInYaml = yaml.getFunctions();
-
+        yaml.init();
+        this.functionName = yaml.getFunctionName();
+        this.functions = yaml.getFunctions();
         //Create a map of all rules and fill them with previous data from the mongoDB
         this.ruleMap = RuleFactory.create(this.dbhandler.getSLOs(),this.dbhandler.getSloPeriods());
-        for(String functionName : this.functionsInYaml){
+        for(String functionName : this.functionName){
             this.mdbhandler.addEntriesToRule(functionName, this.ruleMap.get(functionName));
         }
     }

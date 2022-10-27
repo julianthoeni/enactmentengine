@@ -10,23 +10,36 @@ public class FunctionScheduler {
     private String currentResourceLink;
     private Map<String, Rule> ruleMap;
     private String calculatedResourceLink;
-    public FunctionScheduler(String currentResourceLink, Map<String, Rule> ruleMap){
-        this.currentResourceLink = currentResourceLink;
-        this.ruleMap = ruleMap;
-        this.runScheduler();
+    public FunctionScheduler(){
     }
     private static final Logger logger = LoggerFactory.getLogger(FunctionNode.class);
 
 
-    public String getCalculatedResourceLink(){
-        return this.calculatedResourceLink;
-    }
-
-    private void runScheduler(){
-        logger.info("Scheduler run for: " + this.currentResourceLink);
+    static String runScheduler(String functionName){
         //Todo: Do some magic here or Math.random()
-        this.calculatedResourceLink = this.currentResourceLink;
-        System.out.println(ruleMap.get("convertValues"));
+        SLOhandler slohandler = SLOhandler.getInstance();
+        return slohandler.getMDBhandler().getRandomResourceFromFunctionName(functionName);
     }
 
+    static String runSchedulerInit(String functionName){
+        SLOhandler slohandler = SLOhandler.getInstance();
+        FunctionARNs function = slohandler.functions.get(functionName);
+        if(function == null){
+            return "NotInUse";
+        }
+        System.out.println(function.getARN());
+        System.out.println(function.getAlternatives());
+        if(function.getARN() != null){
+            return function.getARN();
+        }else{
+            if(function.getAlternatives().size() != 0){
+                // Run scheduler
+                return function.getAlternatives().get(0);
+            }
+            else{
+                // Throw error!
+                return null;
+            }
+        }
+    }
 }

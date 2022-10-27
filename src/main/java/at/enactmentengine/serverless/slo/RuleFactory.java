@@ -139,8 +139,7 @@ public class RuleFactory {
             }
 
             if (mainSlo == null) throw new Exception("No main SLO defined for " + r);
-            rules.put(r, new Rule(mainSlo, additionalSlos, r, r)); // TODO: set standard execution (last "r")
-
+            rules.put(r, new Rule(mainSlo, additionalSlos, r));
         }
 
         return rules;

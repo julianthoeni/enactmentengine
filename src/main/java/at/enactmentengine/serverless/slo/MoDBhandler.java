@@ -9,7 +9,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import static com.mongodb.client.model.Filters.*;
@@ -107,5 +109,19 @@ public class MoDBhandler {
             long date = dateFormater.parse(doc.get("startTime").toString()).getTime();
             rule.addDataEntry((long) doc.get("RTT"),date,(double) doc.get("cost"),(boolean) doc.get("success"),doc.get("function_id").toString());
         }
+    }
+
+    public String getRandomResourceFromFunctionName(String functionName){
+        Bson equalComparison = lte("functionName", functionName);
+        List<String> allResources = new ArrayList<>();
+        for (Document doc : this.mongoCollection.find(equalComparison)) {
+            String functionId = (String)doc.get("function_id");
+            if(!allResources.contains(functionId)){
+                allResources.add(functionId);
+                System.out.println(functionId);
+            }
+        }
+        if(allResources.isEmpty()) return null;
+        return allResources.get(0);
     }
 }

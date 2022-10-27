@@ -299,7 +299,7 @@ public class FunctionNode extends Node {
             SLOhandler slohandler = SLOhandler.getInstance();
 
             //TODO: Implement SLO-Handler (scheduler should change the 'resourceLink')
-            System.out.println(name);
+            //System.out.println(name);
             //System.out.println(slohandler.getRuleMap().get(name).toString());
             /* Invoke the function with SLO */
             long start = System.currentTimeMillis();
