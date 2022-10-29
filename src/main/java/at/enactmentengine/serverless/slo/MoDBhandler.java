@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import static com.mongodb.client.model.Sorts.descending;
 
 import static com.mongodb.client.model.Filters.*;
 
@@ -124,4 +125,21 @@ public class MoDBhandler {
         if(allResources.isEmpty()) return null;
         return allResources.get(0);
     }
+
+    public int getTimoutFromOldFunction(String arn){
+        Bson equalComparison = lte("function_id", arn);
+        List<String> allResources = new ArrayList<>();
+        this.mongoCollection.find(equalComparison).sort(descending("timeout")).first();
+        //TODO: Add in FTjFaas (MongoDBAccess.class - line 83 and 87) and in FunctionNode.java (MongoDBAccess.saveLog (...)) entry for timeout
+        return 0;
+    }
+
+    public int getMemoryFromOldFunction(String arn){
+        Bson equalComparison = lte("function_id", arn);
+        List<String> allResources = new ArrayList<>();
+        this.mongoCollection.find(equalComparison).sort(descending("maxMemory")).first();
+        //TODO: Add in FTjFaas (MongoDBAccess.class - line 83 and 87) and in FunctionNode.java (MongoDBAccess.saveLog (...)) entry for maxMemory
+        return 0;
+    }
+
 }
