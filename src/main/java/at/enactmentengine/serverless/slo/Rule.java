@@ -1,7 +1,6 @@
 package at.enactmentengine.serverless.slo;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Rule {
     private SLO mainSlo;
@@ -34,6 +33,43 @@ public class Rule {
             }
         return true;
     }
+
+    public String resolve(){
+        if (check()){
+            return currentExecution;
+        }
+        String nextResourceLink = null;
+        Map<String, Double> points = new HashMap<>();
+
+        // give all resourceLinks zero points to start with:
+        for(String resourceLink : data.getResourceLinks()){
+            points.put(resourceLink, 0d);
+        }
+
+        // lowest points is best:
+        // merge maps together and save to points map
+        mainSlo.getPoints().forEach((key, value) -> points.merge((String) key, (Double) value, (v1, v2) -> (Double)(v1 + v2)));
+
+        for(SLO slo : additionalSlos){
+            slo.getPoints().forEach((key, value) -> points.merge((String) key, (Double) value, (v1, v2) -> (Double)(v1 + v2)));
+        }
+
+        double minVal = 1d;
+
+        for(Map.Entry<String, Double> entry : points.entrySet()){
+            if (entry.getValue() < minVal){
+                minVal = entry.getValue();
+                nextResourceLink = entry.getKey();
+            }
+        }
+
+        if(nextResourceLink == null || !data.getResourceLinks().contains(nextResourceLink)){ // safe-fail if no solution found:
+            nextResourceLink = currentExecution;
+        }
+
+        return nextResourceLink;
+    }
+
 
     public void addDataEntry(long rtt, long timeStamp, double cost, boolean success, String resourceLink){
         this.data.addEntry(this.data.getList().size(), rtt, timeStamp, cost, success, resourceLink);
