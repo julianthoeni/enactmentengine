@@ -34,8 +34,8 @@ public class Rule {
         return true;
     }
 
-    public String resolve(){
-        if (check()){
+    public String resolve(boolean shouldCheck){
+        if(shouldCheck || check()){
             return currentExecution;
         }
         String nextResourceLink = null;

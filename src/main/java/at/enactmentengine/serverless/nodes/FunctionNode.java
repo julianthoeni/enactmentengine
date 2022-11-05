@@ -2,7 +2,6 @@ package at.enactmentengine.serverless.nodes;
 
 import at.enactmentengine.serverless.exception.MissingInputDataException;
 import at.enactmentengine.serverless.object.Utils;
-import at.enactmentengine.serverless.slo.FunctionScheduler;
 import at.enactmentengine.serverless.slo.SLOhandler;
 import at.uibk.dps.*;
 import at.uibk.dps.afcl.functions.objects.DataIns;
@@ -17,19 +16,13 @@ import at.uibk.dps.function.Function;
 //import at.uibk.dps.socketutils.entity.Invocation;
 import at.uibk.dps.util.Event;
 import at.uibk.dps.util.Type;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import io.netty.handler.codec.json.JsonObjectDecoder;
 import jFaaS.Gateway;
 import jFaaS.utils.PairResult;
-import org.glassfish.hk2.utilities.ImmediateErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.constraints.Null;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
@@ -298,9 +291,11 @@ public class FunctionNode extends Node {
         if (this.slo) {
             SLOhandler slohandler = SLOhandler.getInstance();
 
-            //TODO: Implement SLO-Handler (scheduler should change the 'resourceLink')
-            //System.out.println(name);
-            //System.out.println(slohandler.getRuleMap().get(name).toString());
+            //TODO: Check if SLO met
+            //No:
+            // -> Run scheduler
+            resourceLink = slohandler.getRuleMap().get(name).resolve(slohandler.checkIfSLOisMet());
+            System.out.println(resourceLink);
             /* Invoke the function with SLO */
             long start = System.currentTimeMillis();
             pairResult = gateway.invokeFunction(resourceLink, functionInputs);

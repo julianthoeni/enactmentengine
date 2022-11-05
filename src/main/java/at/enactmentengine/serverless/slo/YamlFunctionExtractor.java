@@ -2,10 +2,7 @@ package at.enactmentengine.serverless.slo;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class YamlFunctionExtractor {
 
@@ -50,17 +47,23 @@ public class YamlFunctionExtractor {
                     if(lineFromFile.contains("- name: \"alternatives\"")){
                         String functionAlternatives = scanner.nextLine().replace(" ","").
                                 replace("value:","").replace("\"","");
-                        String[] alternativeString = functionAlternatives.replace("[","").replace("]","").split(",");
-                        for(String alt : alternativeString){
-                            alternatives.add(alt);
+                        if(functionAlternatives.isEmpty()){
+                            alternatives = Collections.emptyList();
+                        }else{
+                            String[] alternativeString = functionAlternatives.replace("[","").replace("]","").split(",");
+                            for(String alt : alternativeString){
+                                alternatives.add(alt);
+                            }
                         }
                     }else{
-                        alternatives = null;
+                        alternatives = Collections.emptyList();
                 }
                 }else{
-                    alternatives = null;
+                    alternatives = Collections.emptyList();
                 }
-                if(!this.functions.containsKey(name)) this.functions.put(name,new FunctionARNs(arn,alternatives));
+                if(!this.functions.containsKey(name)){
+                    this.functions.put(name,new FunctionARNs(arn,alternatives));
+                }
             }
         }
     }

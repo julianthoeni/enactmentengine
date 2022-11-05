@@ -15,10 +15,11 @@ public class FunctionScheduler {
     private static final Logger logger = LoggerFactory.getLogger(FunctionNode.class);
 
 
-    static String runScheduler(String functionName){
-        //Todo: Do some magic here or Math.random()
+    public static String runScheduler(String functionName){
+        System.out.println("Running scheduler ...");
         SLOhandler slohandler = SLOhandler.getInstance();
-        return slohandler.getMDBhandler().getRandomResourceFromFunctionName(functionName);
+        //Todo: Do some magic here or Math.random()
+        return slohandler.functions.get(functionName).getAlternatives().get(0);
     }
 
     static String runSchedulerInit(String functionName){
@@ -27,17 +28,16 @@ public class FunctionScheduler {
         if(function == null){
             return "NotInUse";
         }
-        System.out.println(function.getARN());
-        System.out.println(function.getAlternatives());
         if(function.getARN() != null){
             return function.getARN();
         }else{
-            if(function.getAlternatives().size() != 0){
-                // Run scheduler
-                return function.getAlternatives().get(0);
+            if(!function.getAlternatives().isEmpty()){
+                //Run scheduler
+                return runScheduler(functionName);
             }
             else{
                 // Throw error!
+                System.out.println("No resource and alternative defined - ERROR");
                 return null;
             }
         }

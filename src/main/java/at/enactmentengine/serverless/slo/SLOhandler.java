@@ -74,4 +74,9 @@ public final class SLOhandler {
         return Collections.unmodifiableMap(this.ruleMap);
     }
 
+    public boolean checkIfSLOisMet(){
+        //TODO: Implement time and function-name based checkinterval
+        return false;
+    }
+
 }

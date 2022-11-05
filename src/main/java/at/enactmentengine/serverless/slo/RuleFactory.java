@@ -139,7 +139,17 @@ public class RuleFactory {
             }
 
             if (mainSlo == null) throw new Exception("No main SLO defined for " + r);
-            rules.put(r, new Rule(mainSlo, additionalSlos, r));
+            Rule rule = new Rule(mainSlo, additionalSlos, r);
+            SLOhandler slohandler = SLOhandler.getInstance();
+            if(slohandler.functions.containsKey(r)){
+                if(slohandler.functions.get(r).getARN() != null){
+                    rule.addResourceEntry(slohandler.functions.get(r).getARN());
+                }
+                for(String alternative : slohandler.functions.get(r).getAlternatives()){
+                    rule.addResourceEntry(alternative);
+                }
+            }
+            rules.put(r, rule);
         }
 
         return rules;
