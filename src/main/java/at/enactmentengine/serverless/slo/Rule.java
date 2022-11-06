@@ -16,26 +16,28 @@ public class Rule {
             this.additionalSlos = null;
         this.data = new SloData(functionName);
 
-        this.currentExecution = FunctionScheduler.runSchedulerInit(functionName);
+        //this.currentExecution = FunctionScheduler.runSchedulerInit(functionName);
 
         this.mainSlo = mainSlo;
         mainSlo.setData(this.data);
 
+        additionalSlos.forEach(s -> s.setData(this.data));
+
     }
 
     public boolean check(){
-        if (!this.mainSlo.isInAgreement()){
+        if (!this.mainSlo.isInAgreement(currentExecution)){
             return false;
         }
         if (this.additionalSlos.size() > 0)
-        for (SLO additionalSlo : additionalSlos) {
-                if(!additionalSlo.isInAgreement()) return false;
+            for (SLO additionalSlo : additionalSlos) {
+                if(!additionalSlo.isInAgreement(currentExecution)) return false;
             }
         return true;
     }
 
-    public String resolve(boolean shouldCheck){
-        if(shouldCheck || check()){
+    public String resolve(boolean doCheck){
+        if(doCheck && check()){
             return currentExecution;
         }
         String nextResourceLink = null;
@@ -48,13 +50,13 @@ public class Rule {
 
         // lowest points is best:
         // merge maps together and save to points map
-        mainSlo.getPoints().forEach((key, value) -> points.merge((String) key, (Double) value, (v1, v2) -> (Double)(v1 + v2)));
+        mainSlo.getPoints().forEach((key, value) -> points.merge((String) key, (Double) value, (v1, v2) -> 2 * (Double)(v1 + v2)));
 
         for(SLO slo : additionalSlos){
             slo.getPoints().forEach((key, value) -> points.merge((String) key, (Double) value, (v1, v2) -> (Double)(v1 + v2)));
         }
 
-        double minVal = 1d;
+        double minVal = 1000d;
 
         for(Map.Entry<String, Double> entry : points.entrySet()){
             if (entry.getValue() < minVal){
@@ -67,6 +69,7 @@ public class Rule {
             nextResourceLink = currentExecution;
         }
 
+        setCurrentExecution(nextResourceLink);
         return nextResourceLink;
     }
 
@@ -77,6 +80,10 @@ public class Rule {
 
     public void addResourceEntry(String resource){
         this.data.addResourceLink(resource);
+    }
+
+    public void setCurrentExecution(String currentExecution) {
+        this.currentExecution = currentExecution;
     }
 
 }

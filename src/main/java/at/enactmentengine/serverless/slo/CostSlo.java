@@ -17,12 +17,12 @@ public class CostSlo extends SLO<Double>{
     }
 
     @Override
-    public boolean isInAgreement() {
+    public boolean isInAgreement(String resourceLink) {
         // create timestamp:
         long timestamp = System.currentTimeMillis();
         for (SloEntry s : this.getEntries()){
-            double totalCost = getTotalCost(timestamp, s.getTimeFrameInMs(), Arrays.asList("start"));
-            System.out.println(totalCost);
+            double totalCost = getTotalCost(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink));
+            //System.out.println("Average cost: " + totalCost);
             switch(s.getOperator()){
                 case LESS_THAN: if (!(totalCost < (Double) s.getValue())){
                     return false;

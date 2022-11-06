@@ -20,12 +20,12 @@ public class TimeSlo extends SLO<Double>{
     }
 
     @Override
-    public boolean isInAgreement() {
+    public boolean isInAgreement(String resourceLink) {
         // create timestamp:
         long timestamp = System.currentTimeMillis();
         for (SloEntry s : this.getEntries()){
-            double averageRtt = getAverageRtt(timestamp, s.getTimeFrameInMs(), Arrays.asList("Test"));
-            System.out.println(averageRtt);
+            double averageRtt = getAverageRtt(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink));
+            //System.out.println("Average RTT: " + averageRtt);
             switch(s.getOperator()){
                 case LESS_THAN: if (!(averageRtt < (Double) s.getValue())){
                     return false;

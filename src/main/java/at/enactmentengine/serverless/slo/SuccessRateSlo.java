@@ -19,12 +19,12 @@ public class SuccessRateSlo extends SLO<Double>{
     }
 
     @Override
-    public boolean isInAgreement() {
+    public boolean isInAgreement(String resourceLink) {
         // create timestamp:
         long timestamp = System.currentTimeMillis();
         for (SloEntry s : this.getEntries()){
-            double successRate = getSuccessRate(timestamp, s.getTimeFrameInMs(), Arrays.asList("start"));
-            System.out.println(successRate);
+            double successRate = getSuccessRate(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink));
+            //System.out.println("Average Success rate: " + successRate);
             switch(s.getOperator()){
                 case LESS_THAN: if (!(successRate < (Double) s.getValue())){
                     return false;

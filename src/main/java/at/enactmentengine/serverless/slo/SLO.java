@@ -72,7 +72,7 @@ public abstract class SLO<E> {
     private SloData data;
 
 
-    public abstract boolean isInAgreement();
+    public abstract boolean isInAgreement(String resourceLink);
 
     protected abstract Map<String, Double> getPoints();
 
