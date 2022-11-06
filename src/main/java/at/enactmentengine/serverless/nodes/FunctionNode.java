@@ -294,8 +294,8 @@ public class FunctionNode extends Node {
             //TODO: Check if SLO met
             //No:
             // -> Run scheduler
-            resourceLink = slohandler.getRuleMap().get(name).resolve(slohandler.checkIfSLOisMet());
-            System.out.println(resourceLink);
+            resourceLink = slohandler.getRuleMap().get(name).resolve();
+            System.out.println("Executing: " + resourceLink);
             /* Invoke the function with SLO */
             long start = System.currentTimeMillis();
             pairResult = gateway.invokeFunction(resourceLink, functionInputs);

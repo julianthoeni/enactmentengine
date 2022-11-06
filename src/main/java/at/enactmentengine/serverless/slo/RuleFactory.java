@@ -143,6 +143,7 @@ public class RuleFactory {
             SLOhandler slohandler = SLOhandler.getInstance();
             if(slohandler.functions.containsKey(r)){
                 if(slohandler.functions.get(r).getARN() != null){
+                    rule.setCurrentExecution(slohandler.functions.get(r).getARN());
                     rule.addResourceEntry(slohandler.functions.get(r).getARN());
                 }
                 for(String alternative : slohandler.functions.get(r).getAlternatives()){

@@ -36,8 +36,12 @@ public class Rule {
         return true;
     }
 
-    public String resolve(boolean doCheck){
-        if(doCheck && check()){
+    public String resolve(){
+        if(this.currentExecution == null){
+            //TODO: Call scheduler
+            System.out.println("Call scheduler plz"); //This will throw an error for now
+        }
+        if(check()){
             return currentExecution;
         }
         String nextResourceLink = null;
