@@ -6,8 +6,9 @@ public class Rule {
     private SLO mainSlo;
     private List<SLO> additionalSlos;
     private SloData data;
-
     private String currentExecution;
+    private final long timeBetweenResolves = 500L; // in milliseconds
+    private long lastExecution = 0;
 
     public Rule(SLO mainSlo, List<SLO> slos, String functionName){
         if(slos != null)
@@ -41,6 +42,11 @@ public class Rule {
             //TODO: Call scheduler
             System.out.println("Call scheduler plz"); //This will throw an error for now
         }
+
+        if(System.currentTimeMillis() - timeBetweenResolves < lastExecution){
+            return currentExecution;
+        }
+
         if(check()){
             return currentExecution;
         }
@@ -74,6 +80,7 @@ public class Rule {
         }
 
         setCurrentExecution(nextResourceLink);
+        this.lastExecution = System.currentTimeMillis();
         return nextResourceLink;
     }
 
