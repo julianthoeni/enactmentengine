@@ -104,7 +104,7 @@ public class MoDBhandler {
     }
 
     public void addEntriesToRule(String functionName, Rule rule) throws ParseException {
-        Bson equalComparison = lte("functionName", functionName);
+        Bson equalComparison = eq("functionName", functionName);
         for (Document doc : this.mongoCollection.find(equalComparison)) {
             SimpleDateFormat dateFormater = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzzz yyyy");
             long date = dateFormater.parse(doc.get("startTime").toString()).getTime();
