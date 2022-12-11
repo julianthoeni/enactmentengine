@@ -2,18 +2,19 @@ package at.enactmentengine.serverless.slo;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class SuccessRateSlo extends SLO<Double>{
+public class SuccessRateSloBudget extends SLO<Double>{
 
-    public SuccessRateSlo(SloOperator operator, Double value) {
+    public SuccessRateSloBudget(SloOperator operator, Double value) {
         super(operator, value, null);
     }
 
-    public SuccessRateSlo(SloOperator operator, Double value, String timeFrame){
+    public SuccessRateSloBudget(SloOperator operator, Double value, String timeFrame){
         super (operator, value, timeFrame, null);
     }
 
-    public SuccessRateSlo(SloOperator operator, Double value, String timeFrame, Integer budget) {
+    public SuccessRateSloBudget(SloOperator operator, Double value, String timeFrame, Integer budget) {
         super (operator, value, timeFrame, budget);
     }
 
@@ -22,34 +23,49 @@ public class SuccessRateSlo extends SLO<Double>{
         return this.getData().getList().stream().filter(c -> c.getTimestamp() > currentTime - timeFrameInMs).filter(c -> resourceLinks.contains(c.getResourceLink())).mapToDouble(entry -> entry.isSuccess() ? 1.0d : 0.0d).summaryStatistics().getAverage();
     }
 
+    private List<SloData.DataEntry> getEntriesWithinTimeFrame(long currentTime, long timeFrameInMs, List<String> resourceLinks){
+        return Collections.unmodifiableList(this.getData().getList().stream().filter(c -> c.getTimestamp() > currentTime - timeFrameInMs).filter(c -> resourceLinks.contains(c.getResourceLink())).collect(Collectors.toList()));
+    }
+
+    private int usedBudgetByTimeFrame(long currentTime, long timeFrameInMs, List<String> resourceLinks, SloOperator operator, Double value){
+        int hits = 0;
+        List<SloData.DataEntry> entries = this.getEntriesWithinTimeFrame(currentTime, timeFrameInMs, resourceLinks);
+
+        for(SloData.DataEntry entry : entries) {
+            if(!entry.isSuccess()) hits++;
+        }
+
+        /*
+        switch(operator){
+            case LESS_THAN: for(SloData.DataEntry entry : entries) {
+                if(entry.isSuccess() > value) hits++;
+            } break;
+            case GREATER_THAN: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() < value) hits++;
+            } break;
+            case LESS_EQUALS: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() >= value) hits++;
+            } break;
+            case GREATER_EQUALS: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() <= value) hits++;
+            } break;
+            case EQUALS: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() == value) hits++;
+            } break;
+            case RANGE: break; // TODO: implement range for SuccessrateSLOBudget
+        }*/
+
+        return hits;
+    }
+
     @Override
     public boolean isInAgreement(String resourceLink) {
         // create timestamp:
         long timestamp = System.currentTimeMillis();
-        for (SloEntry s : this.getEntries()){
-            double successRate = getSuccessRate(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink));
-            //System.out.println("Average Success rate: " + successRate);
-            switch(s.getOperator()){
-                case LESS_THAN: if (!(successRate < (Double) s.getValue())){
-                    return false;
-                } break;
-                case GREATER_THAN: if (!(successRate > (Double) s.getValue())){
-                    return false;
-                } break;
-                case LESS_EQUALS: if (!(successRate <= (Double) s.getValue())){
-                    return false;
-                } break;
-                case GREATER_EQUALS: if (!(successRate >= (Double) s.getValue())){
-                    return false;
-                } break;
-                case EQUALS: if (!(successRate == (Double) s.getValue())){
-                    return false;
-                } break;
-                case RANGE: return false; // TODO: implement range for SuccessRateSlo
-            }
+        for (SloEntry s : this.getEntries()) {
+            if (s.getBudget() == null) return false; // no budget defined "throw error"
+            if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) > s.getBudget()) return false;
         }
-
-
         return true;
     }
 

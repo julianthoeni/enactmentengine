@@ -1,18 +1,19 @@
 package at.enactmentengine.serverless.slo;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class CostSlo extends SLO<Double>{
+public class CostSloBudget extends SLO<Double>{
 
-    public CostSlo(SloOperator operator, Double value) {
+    public CostSloBudget(SloOperator operator, Double value) {
         super(operator, value, null);
     }
 
-    public CostSlo(SloOperator operator, Double value, String timeFrame){
+    public CostSloBudget(SloOperator operator, Double value, String timeFrame){
         super (operator, value, timeFrame, null);
     }
 
-    public CostSlo(SloOperator operator, Double value, String timeFrame, Integer budget) {
+    public CostSloBudget(SloOperator operator, Double value, String timeFrame, Integer budget) {
         super (operator, value, timeFrame, budget);
     }
 
@@ -20,34 +21,45 @@ public class CostSlo extends SLO<Double>{
         return this.getData().getList().stream().filter(c -> c.getTimestamp() > currentTime - timeFrameInMs).filter(c -> resourceLinks.contains(c.getResourceLink())).mapToDouble(SloData.DataEntry::getCost).sum();
     }
 
+    private List<SloData.DataEntry> getEntriesWithinTimeFrame(long currentTime, long timeFrameInMs, List<String> resourceLinks){
+        return Collections.unmodifiableList(this.getData().getList().stream().filter(c -> c.getTimestamp() > currentTime - timeFrameInMs).filter(c -> resourceLinks.contains(c.getResourceLink())).collect(Collectors.toList()));
+    }
+
+    private int usedBudgetByTimeFrame(long currentTime, long timeFrameInMs, List<String> resourceLinks, SloOperator operator, Double value){
+        int hits = 0;
+        List<SloData.DataEntry> entries = this.getEntriesWithinTimeFrame(currentTime, timeFrameInMs, resourceLinks);
+
+        switch(operator){
+            case LESS_THAN: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() > value) hits++;
+            } break;
+            case GREATER_THAN: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() < value) hits++;
+            } break;
+            case LESS_EQUALS: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() >= value) hits++;
+            } break;
+            case GREATER_EQUALS: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() <= value) hits++;
+            } break;
+            case EQUALS: for(SloData.DataEntry entry : entries) {
+                if(entry.getCost() == value) hits++;
+            } break;
+            case RANGE: break; // TODO: implement range for TimeSLOBudget
+        }
+
+        return hits;
+    }
+
+
     @Override
     public boolean isInAgreement(String resourceLink) {
         // create timestamp:
         long timestamp = System.currentTimeMillis();
-        for (SloEntry s : this.getEntries()){
-            double totalCost = getTotalCost(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink));
-            //System.out.println("Average cost: " + totalCost);
-            switch(s.getOperator()){
-                case LESS_THAN: if (!(totalCost < (Double) s.getValue())){
-                    return false;
-                } break;
-                case GREATER_THAN: if (!(totalCost > (Double) s.getValue())){
-                    return false;
-                } break;
-                case LESS_EQUALS: if (!(totalCost <= (Double) s.getValue())){
-                    return false;
-                } break;
-                case GREATER_EQUALS: if (!(totalCost >= (Double) s.getValue())){
-                    return false;
-                } break;
-                case EQUALS: if (!(totalCost == (Double) s.getValue())){
-                    return false;
-                } break;
-                case RANGE: return false; // TODO: implement range for CostSlo
-            }
+        for (SloEntry s : this.getEntries()) {
+            if (s.getBudget() == null) return false; // no budget defined "throw error"
+            if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) > s.getBudget()) return false;
         }
-
-
         return true;
     }
 
