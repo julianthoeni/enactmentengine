@@ -11,14 +11,15 @@ public abstract class SLO<E> {
         private E value;
         private SloOperator operator;
         private String timeFrame;
-
+        private Integer budget;
         private long timeFrameInMs;
 
-        public SloEntry (E value, SloOperator operator, String timeFrame){
+        public SloEntry (E value, SloOperator operator, String timeFrame, Integer budget){
             this.value = value;
             this.operator = operator;
             this.timeFrame = timeFrame;
             this.timeFrameInMs = parseStringToMs(timeFrame);
+            this.budget = budget;
         }
 
         public E getValue() {
@@ -31,6 +32,10 @@ public abstract class SLO<E> {
 
         public String getTimeFrame() {
             return timeFrame;
+        }
+
+        public Integer getBudget() {
+            return budget;
         }
 
         public long getTimeFrameInMs(){
@@ -86,22 +91,22 @@ public abstract class SLO<E> {
         return dataByResource;
     }
 
-    public SLO(SloOperator operator, E value){
+    public SLO(SloOperator operator, E value, Integer budget){
         this.entries = new ArrayList<>();
-        this.entries.add(new SloEntry(value, operator, "24h"));
+        this.entries.add(new SloEntry(value, operator, "24h", budget));
     }
 
-    public SLO(SloOperator operator, E value, String timeFrame){
+    public SLO(SloOperator operator, E value, String timeFrame, Integer budget){
         this.entries = new ArrayList<>();
-        this.entries.add(new SloEntry(value, operator, timeFrame));
+        this.entries.add(new SloEntry(value, operator, timeFrame, budget));
     }
 
     public List<SloEntry> getEntries(){
         return Collections.unmodifiableList(this.entries);
     }
 
-    public void addEntry(SloOperator operator, E value, String timeFrame){
-        this.entries.add(new SloEntry(value, operator, timeFrame));
+    public void addEntry(SloOperator operator, E value, String timeFrame, Integer budget){
+        this.entries.add(new SloEntry(value, operator, timeFrame, budget));
     }
 
     protected void setData(SloData data){

@@ -34,9 +34,9 @@ public class RuleFactory {
         public String value;
         public SloOperator operator;
         public String period;
-        public String budget;
+        public Integer budget;
 
-        SloSettingsObject(String value, SloOperator operator, String period, String budget){
+        SloSettingsObject(String value, SloOperator operator, String period, Integer budget){
             this.value = value;
             this.operator = operator;
             this.period = period;
@@ -83,7 +83,7 @@ public class RuleFactory {
                 String value = sloPeriod.getString("value");
                 String operatorString = sloPeriod.getString("operator");
                 String period = sloPeriod.getString("period");
-                String budget = sloPeriod.getString("budget");
+                Integer budget = sloPeriod.getInt("budget");
                 int sloid = sloPeriod.getInt("sloid");
 
                 SloOperator operator = SloOperator.getOperator(operatorString);
@@ -109,7 +109,7 @@ public class RuleFactory {
 
                 for (SloSettingsObject singleSloSetting : settings) {
                     if (temp != null){
-                        temp.addEntry(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                        temp.addEntry(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period, singleSloSetting.budget);
                     }
                     else if(temp == null) {
                         switch (entry.unit) { // temp data TODO: add first entry from list, and remove from list
