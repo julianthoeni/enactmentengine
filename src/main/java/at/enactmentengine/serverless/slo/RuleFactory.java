@@ -34,11 +34,13 @@ public class RuleFactory {
         public String value;
         public SloOperator operator;
         public String period;
+        public String budget;
 
-        SloSettingsObject(String value, SloOperator operator, String period){
+        SloSettingsObject(String value, SloOperator operator, String period, String budget){
             this.value = value;
             this.operator = operator;
             this.period = period;
+            this.budget = budget;
         }
 
         @Override
@@ -47,6 +49,7 @@ public class RuleFactory {
                     "value='" + value + '\'' +
                     ", operator=" + operator +
                     ", period='" + period + '\'' +
+                    ", budget='" + budget + '\'' +
                     '}';
         }
     }
@@ -80,14 +83,15 @@ public class RuleFactory {
                 String value = sloPeriod.getString("value");
                 String operatorString = sloPeriod.getString("operator");
                 String period = sloPeriod.getString("period");
+                String budget = sloPeriod.getString("budget");
                 int sloid = sloPeriod.getInt("sloid");
 
                 SloOperator operator = SloOperator.getOperator(operatorString);
 
                 List<SloSettingsObject> settings = sloTimePeriodMap.getOrDefault(sloid, new LinkedList<>());
-                settings.add(new SloSettingsObject(value, operator, period));
+                settings.add(new SloSettingsObject(value, operator, period, budget));
                 sloTimePeriodMap.put(sloid, settings);
-
+                System.out.println(settings.toString());
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
