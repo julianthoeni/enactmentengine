@@ -114,15 +114,28 @@ public class RuleFactory {
                     else if(temp == null) {
                         switch (entry.unit) { // temp data TODO: add first entry from list, and remove from list
                             case "$":
-                                temp = new CostSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                if(singleSloSetting.budget == null){
+                                    temp = new CostSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                } else {
+                                    temp = new CostSloBudget(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period, singleSloSetting.budget);
+                                }
+
                                 break;
                             case "%":
-                                temp = new SuccessRateSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                if(singleSloSetting.budget == null){
+                                    temp = new SuccessRateSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                } else {
+                                    temp = new SuccessRateSloBudget(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period, singleSloSetting.budget);
+                                }
                                 break;
                             case "s": // why is language level 8?
                             case "h":
                             case "ms":
-                                temp = new TimeSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                if(singleSloSetting.budget == null){
+                                    temp = new TimeSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
+                                } else {
+                                    temp = new TimeSloBudget(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period, singleSloSetting.budget);
+                                }
                                 break;
                             default:
                                 throw new IllegalStateException("Unexpected value: " + entry.unit);
