@@ -1,10 +1,13 @@
 package at.enactmentengine.serverless.slo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class TimeSloBudget extends SLO<Double>{
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(Rule.class);
     public TimeSloBudget(SloOperator operator, Double value) {
         super(operator, value, null);
     }
@@ -57,8 +60,12 @@ public class TimeSloBudget extends SLO<Double>{
         long timestamp = System.currentTimeMillis();
         for (SloEntry s : this.getEntries()) {
             if (s.getBudget() == null) return false; // no budget defined "throw error"
-            if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) > s.getBudget()) return false;
+            if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) > s.getBudget()){
+                LOGGER.info("SLO: Budget (" + s.getBudget() + ") used up for " + resourceLink );
+                return false;
+            }
         }
+        LOGGER.info("SLO: " + resourceLink + " is ok");
         return true;
     }
 

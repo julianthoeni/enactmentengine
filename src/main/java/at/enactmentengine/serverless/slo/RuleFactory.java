@@ -91,7 +91,6 @@ public class RuleFactory {
                 List<SloSettingsObject> settings = sloTimePeriodMap.getOrDefault(sloid, new LinkedList<>());
                 settings.add(new SloSettingsObject(value, operator, period, budget));
                 sloTimePeriodMap.put(sloid, settings);
-                System.out.println(settings.toString());
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

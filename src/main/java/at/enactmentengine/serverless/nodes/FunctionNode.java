@@ -295,7 +295,7 @@ public class FunctionNode extends Node {
             //No:
             // -> Run scheduler
             resourceLink = slohandler.getRuleMap().get(name).resolve();
-            System.out.println("Executing: " + resourceLink);
+            logger.info("SLO: Executing " + resourceLink);
             /* Invoke the function with SLO */
             long start = System.currentTimeMillis();
             pairResult = gateway.invokeFunction(resourceLink, functionInputs);
