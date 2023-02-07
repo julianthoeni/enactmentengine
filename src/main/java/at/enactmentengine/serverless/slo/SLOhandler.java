@@ -1,6 +1,9 @@
 package at.enactmentengine.serverless.slo;
 
 import at.enactmentengine.serverless.slo.cost.CostHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -18,9 +21,6 @@ public final class SLOhandler {
     private List<String> functionName;
     private Map<String, Rule> ruleMap;
     public HashMap<String, FunctionARNs> functions = new HashMap<>();
-
-    public void SLOhandler() {
-    }
 
     public static SLOhandler getInstance() {
         if (SLOhandler_instance == null) {
@@ -56,12 +56,9 @@ public final class SLOhandler {
         }
     }
 
-    public DBhandler getDbhandler() {
-        return this.dbhandler;
-    }
-
-    public MoDBhandler getMDBhandler() {
-        return this.mdbhandler;
+    public void close(){
+        this.dbhandler.closeDB();
+        this.mdbhandler.close();
     }
 
     public CostHandler getCostHandler(){ return this.costHandler; }
@@ -72,11 +69,6 @@ public final class SLOhandler {
 
     public Map<String, Rule> getRuleMap(){
         return Collections.unmodifiableMap(this.ruleMap);
-    }
-
-    public boolean checkIfSLOisMet(){
-        //TODO: Implement time and function-name based checkinterval
-        return false;
     }
 
 }

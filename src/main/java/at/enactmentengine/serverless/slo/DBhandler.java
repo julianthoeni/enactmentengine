@@ -1,5 +1,8 @@
 package at.enactmentengine.serverless.slo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +14,7 @@ import java.util.Properties;
 import java.sql.*;
 
 public class DBhandler {
+    private static final Logger logger = LoggerFactory.getLogger(Rule.class);
     private String hostname;
     private String port;
     private String username;
@@ -38,18 +42,23 @@ public class DBhandler {
 
     public void connectDB() throws SQLException {
         try {
-            System.out.println("Connecting to slo-database (" + this.hostname + ":" + this.port + ") ...");
             this.dbConnection = DriverManager.getConnection("jdbc:mariadb://" + this.hostname + "/", this.username, this.password);
             this.statement = this.dbConnection.createStatement();
-            System.out.println("Successfully");
+            logger.info("Successfully connected to slo-database (" + this.hostname + ":" + this.port + ") ...");
         } catch (SQLException e) {
+            logger.warn("Connection failed to slo-database (" + this.hostname + ":" + this.port + ") ...");
             throw new SQLException("DB-Connection failed ...");
         }
     }
 
-    public void closeDB() throws SQLException {
-        this.dbConnection.close();
-        System.out.println("Disconnected from slo-database");
+    public void closeDB() {
+        try{
+            this.dbConnection.close();
+            logger.info("Disconnected from slo-database");
+        }catch (SQLException e){
+            logger.warn("Disconnecting from slo-database failed ... wait what?!");
+        }
+
     }
 
     public ResultSet getSLOs() throws SQLException {
@@ -89,7 +98,7 @@ public class DBhandler {
                 pricingList.put(code, price);
             }
         }catch (SQLException e) {
-            System.out.println("Receiving LambdaPricing failed - " + e);
+            logger.warn("Receiving LambdaPricing failed - " + e);
         }
         return pricingList;
     }

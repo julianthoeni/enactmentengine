@@ -325,34 +325,34 @@ public class FunctionNode extends Node {
             double calculated_cost = 0;
             String regionCode = slohandler.getCostHandler().getRegionCodeFromARN(resourceLink);
 
-            if(json.get("memory")!=null || json.get("function_duration")!=null || json.get("timeout")!=null){
+            if(json.get("memory")!=null && json.get("function_duration")!=null && json.get("timeout")!=null){
                 function_memory = Integer.parseInt((json.get("memory")).toString().replace("\"",""));
                 function_duration = Integer.parseInt((json.get("function_duration")).toString());
                 if(function_duration == 0) function_duration = 1;
                 function_timeout = Integer.parseInt((json.get("timeout")).toString());
-                System.out.println("Memory: "+function_memory+"MB");
-                System.out.println("Duration "+function_duration+"ms");
-                System.out.println("Timeout: "+function_timeout+"ms");
                 //calculate total cost of function-invocation
                 calculated_cost = slohandler.getCostHandler().getPricingFromRegion(regionCode,function_duration,function_memory);
-                System.out.println("CalculatedCost: " + calculated_cost);
+                if(logger.isDebugEnabled()){
+                    System.out.println("------ Function Characteristics -----");
+                    System.out.println("Memory: "+function_memory+"MB");
+                    System.out.println("Duration "+function_duration+"ms");
+                    System.out.println("Timeout: "+function_timeout+"ms");
+                    System.out.println("\nCalculatedCost: " + calculated_cost);
+                    System.out.println("-------------------------------------");
+                }
+
                 //Save to local ruleMap
                 slohandler.addEntryToRule(name, pairResult.getRTT(), start, calculated_cost, success, resourceLink);
                 //Save to mongodb
                 MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
             }else{
                 if(resultString.contains("errorMessage") && resultString.contains(" Task timed out after ")){
-                    logger.warn("Function has timed out: " + resourceLink);
-                    //TODO: Charge max amount of last function
-                    calculated_cost = slohandler.getCostHandler().getPricingFromRegion(regionCode,
-                            slohandler.getMDBhandler().getTimoutFromOldFunction(resourceLink),
-                            slohandler.getMDBhandler().getMemoryFromOldFunction(resourceLink));
-                        //TODO: Add entry and mongodb.saveLog
-                    //TODO: If no last function, do nothing
+                    logger.warn("Function has timed out: " + resourceLink + ". No information will be stored");
+                    MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
                 }else{
-                    //TODO: Maybe add approximation method from sashko?
+                    // Maybe add approximation method from sashko here
                     logger.warn("Function (" + resourceLink + ")does not return information about memory, duration or timeout. No information will be stored.");
-                    //TODO: Do nothing
+                    MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
                 }
             }
             return pairResult;

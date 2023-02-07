@@ -123,6 +123,8 @@ public class Local {
                 handler.init("sloDatabase.properties", "mongoDatabase.properties", yamlFile);
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
                 result = slos.executeWorkflow(args[0], args[1], -1, start);
+                handler.close();
+
             } else if (length > 1) {
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
                 result = executor.executeWorkflow(args[0], args[1], -1, start);

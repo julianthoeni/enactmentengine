@@ -47,8 +47,8 @@ public class Rule {
 
     public String resolve(){
         if(this.currentExecution == null){
-            //TODO: Call scheduler
-            System.out.println("Call scheduler plz"); //This will throw an error for now
+            this.currentExecution = scheduler();
+            return this.currentExecution;
         }
 
         if(System.currentTimeMillis() - timeBetweenResolves < lastExecution){
@@ -58,6 +58,14 @@ public class Rule {
         if(check()){
             return currentExecution;
         }
+
+        this.currentExecution = scheduler();
+
+        this.lastExecution = System.currentTimeMillis();
+        return this.currentExecution;
+    }
+
+    public String scheduler(){
         String nextResourceLink = null;
         Map<String, Double> points = new HashMap<>();
 
@@ -83,8 +91,16 @@ public class Rule {
         }
 
         double minVal = 1000d;
-        Scheduler.run(points);
+
+        //Remove missing resourceLinks from points-map
+        Map<String, Double> cleaned_points = new HashMap<>();
         for(Map.Entry<String, Double> entry : points.entrySet()){
+            if (data.getResourceLinks().contains(entry.getKey())){
+                cleaned_points.put(entry.getKey(),entry.getValue());
+            }
+        }
+
+        for(Map.Entry<String, Double> entry : cleaned_points.entrySet()){
             if (entry.getValue() < minVal){
                 minVal = entry.getValue();
                 nextResourceLink = entry.getKey();
@@ -94,9 +110,6 @@ public class Rule {
         if(nextResourceLink == null || !data.getResourceLinks().contains(nextResourceLink)){ // safe-fail if no solution found:
             nextResourceLink = currentExecution;
         }
-
-        setCurrentExecution(nextResourceLink);
-        this.lastExecution = System.currentTimeMillis();
         return nextResourceLink;
     }
 

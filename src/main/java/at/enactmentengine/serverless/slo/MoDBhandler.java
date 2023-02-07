@@ -4,20 +4,20 @@ import com.mongodb.client.*;
 import com.mongodb.client.MongoClient;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Properties;
 import static com.mongodb.client.model.Sorts.descending;
 
 import static com.mongodb.client.model.Filters.*;
 
 public class MoDBhandler {
+    private static final Logger logger = LoggerFactory.getLogger(Rule.class);
     private String hostname;
     private String port;
     private String username;
@@ -50,57 +50,11 @@ public class MoDBhandler {
             this.client = MongoClients.create("mongodb://" + this.hostname + ":" + this.port);
             this.mongodatabase = client.getDatabase(this.database);
             this.mongoCollection = this.mongodatabase.getCollection(this.collection);
+            logger.info("Connected to MongoDB");
         }catch (Exception e){
-            System.out.println("Connection to MongoDB (" + this.hostname + ":" + this.port + ") failed");
+            logger.warn("Connection to MongoDB (" + this.hostname + ":" + this.port + ") failed");
             throw e;
         }
-    }
-
-    public void testMongoDB() {
-        Bson equalComparison = lte("RTT", 1115);
-        int counter = 0;
-        for (Document doc : this.mongoCollection.find(equalComparison)) {
-            counter++;
-        }
-    }
-
-    public int getFunctionAvgRTTinPeriod(String arn, long period){
-        Bson equalComparison = lte("function_id", arn);
-        int i = 0;
-        long sum = 0;
-
-        for (Document doc : this.mongoCollection.find(equalComparison)) {
-            Date refDate = new Date();
-            refDate.setTime(refDate.getTime() - period);
-            if(((Date) doc.get("startTime")).after(refDate)){
-                sum += (Long) doc.get("RTT");
-                i++;
-            }
-        }
-        if(i==0) return 0;
-        return (int) sum/i;
-    }
-
-    public double getFunctionSuccessRateInPeriod(String arn, long period){
-        int i = 0;
-        int failures = 0;
-        Bson equalComparison = lte("function_id", arn);
-        for (Document doc : this.mongoCollection.find(equalComparison)) {
-            Date refDate = new Date();
-            refDate.setTime(refDate.getTime() - period);
-            boolean isSuccess = (boolean) doc.get("success");
-            if(((Date) doc.get("startTime")).after(refDate)) {
-                if (!isSuccess) failures++;
-                i++;
-            }
-        }
-        if(i==0) return 0;
-        return (double) failures/i;
-    }
-
-    public double getFunctionTotalCostInPeriod(String arn, long period){
-        //Todo: Implement function callculation for a function
-        return 0;
     }
 
     public void addEntriesToRule(String functionName, Rule rule) throws ParseException {
@@ -112,34 +66,20 @@ public class MoDBhandler {
         }
     }
 
-    public String getRandomResourceFromFunctionName(String functionName){
-        Bson equalComparison = lte("functionName", functionName);
-        List<String> allResources = new ArrayList<>();
-        for (Document doc : this.mongoCollection.find(equalComparison)) {
-            String functionId = (String)doc.get("function_id");
-            if(!allResources.contains(functionId)){
-                allResources.add(functionId);
-                System.out.println(functionId);
-            }
+    public void close(){
+        client.close();
+        logger.info("Disconnected from MongoDB");
+    }
+
+    public double getPreviousPrice(String arn){
+        Bson equalComparison = lte("function_id", arn);
+        Document doc = this.mongoCollection.find(equalComparison).sort(descending("startTime")).first();
+
+        double prev_price = 0d;
+        if(doc != null) {
+            prev_price = (double) doc.get("cost");
         }
-        if(allResources.isEmpty()) return null;
-        return allResources.get(0);
-    }
-
-    public int getTimoutFromOldFunction(String arn){
-        Bson equalComparison = lte("function_id", arn);
-        List<String> allResources = new ArrayList<>();
-        this.mongoCollection.find(equalComparison).sort(descending("timeout")).first();
-        //TODO: Add in FTjFaas (MongoDBAccess.class - line 83 and 87) and in FunctionNode.java (MongoDBAccess.saveLog (...)) entry for timeout
-        return 0;
-    }
-
-    public int getMemoryFromOldFunction(String arn){
-        Bson equalComparison = lte("function_id", arn);
-        List<String> allResources = new ArrayList<>();
-        this.mongoCollection.find(equalComparison).sort(descending("maxMemory")).first();
-        //TODO: Add in FTjFaas (MongoDBAccess.class - line 83 and 87) and in FunctionNode.java (MongoDBAccess.saveLog (...)) entry for maxMemory
-        return 0;
+        return prev_price;
     }
 
 }
