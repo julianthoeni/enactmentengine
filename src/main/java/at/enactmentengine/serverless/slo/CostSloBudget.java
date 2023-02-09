@@ -88,24 +88,32 @@ public class CostSloBudget extends SLO<Double>{
 
             for (SloEntry slo : this.getEntries()){
                 double average = getTotalCost(timestamp, slo.getTimeFrameInMs(), new ArrayList<>(Arrays.asList(resourceLink)));
-
-                switch(slo.getOperator()){
-                    case LESS_THAN:
-                    case LESS_EQUALS: if (average / (Double) slo.getValue() >= 1){
-                        val += 1;
-                    } else {
-                        val += average / (Double) slo.getValue();
-                    } break;
-                    case GREATER_THAN:
-                    case GREATER_EQUALS:  if ((Double) slo.getValue() / average >= 1){
-                        val += 1;
-                    } else {
-                        val += (Double) slo.getValue() / average;
-                    } break;
-                    case EQUALS:  break;
-                    case RANGE: break; // TODO: implement range for TimeSLO
+                if(average != Double.NaN) {
+                    switch (slo.getOperator()) {
+                        case LESS_THAN:
+                        case LESS_EQUALS:
+                            if (average / (Double) slo.getValue() >= 1) {
+                                val += 1;
+                            } else {
+                                val += average / (Double) slo.getValue();
+                            }
+                            break;
+                        case GREATER_THAN:
+                        case GREATER_EQUALS:
+                            if ((Double) slo.getValue() / average >= 1) {
+                                val += 1;
+                            } else {
+                                val += (Double) slo.getValue() / average;
+                            }
+                            break;
+                        case EQUALS:
+                            break;
+                        case RANGE:
+                            break; // TODO: implement range for TimeSLO
+                    }
+                }else{
+                    val = 0.0d;
                 }
-
             }
 
             res.put(resourceLink, val);
