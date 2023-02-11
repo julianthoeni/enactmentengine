@@ -13,6 +13,7 @@ public class Rule {
     private final long timeBetweenResolves = 500L; // in milliseconds
     private long lastExecution = 0;
     private static final Logger logger = LoggerFactory.getLogger(Rule.class);
+    SLO_LOGGER slologger = SLO_LOGGER.getINSTANCE();
     public Rule(SLO mainSlo, List<SLO> slos, String functionName){
         if(slos != null)
             this.additionalSlos = new ArrayList<>(slos);
@@ -32,16 +33,19 @@ public class Rule {
     public boolean check(){
         if (!this.mainSlo.isInAgreement(currentExecution)){
             logger.info("SLO: Function " + this.currentExecution + " does not meet the main-slo");
+            slologger.writeToLog("SLO: Function " + this.currentExecution + " does not meet the main-slo");
             return false;
         }
         if (this.additionalSlos.size() > 0)
             for (SLO additionalSlo : additionalSlos) {
                 if(!additionalSlo.isInAgreement(currentExecution)){
                     logger.info("SLO: Function " + this.currentExecution + " does not meet the additional-slo");
+                    slologger.writeToLog("SLO: Function " + this.currentExecution + " does not meet the additional-slo");
                     return false;
                 }
             }
         logger.info("SLO: Function " + this.currentExecution + " meets all slos");
+        slologger.writeToLog("SLO: Function " + this.currentExecution + " meets all slos");
         return true;
     }
 
@@ -110,6 +114,7 @@ public class Rule {
         if(nextResourceLink == null || !data.getResourceLinks().contains(nextResourceLink)){ // safe-fail if no solution found:
             nextResourceLink = currentExecution;
         }
+        slologger.writeToLog("New resource_link: " + nextResourceLink);
         return nextResourceLink;
     }
 
