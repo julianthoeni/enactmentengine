@@ -84,6 +84,9 @@ public class SuccessRateSloBudget extends SLO<Double>{
         List<String> allResourceLinks = new LinkedList<>(this.getData().getResourceLinks());
 
         long timestamp = System.currentTimeMillis();
+        String bestExecution = "";
+        double bestValue = Double.MAX_VALUE;
+        int maxValue = 0;
 
         for(String resourceLink : dataByResourceLink.keySet()){
             if (!allResourceLinks.contains(resourceLink)) {
@@ -92,8 +95,10 @@ public class SuccessRateSloBudget extends SLO<Double>{
             allResourceLinks.remove(resourceLink); // remove from list -> list should only contain non executed resources at end
 
             double val = 0d;
+            double fullValue = 0d;
 
             for (SloEntry slo : this.getEntries()){
+                maxValue++;
                 double average = getSuccessRate(timestamp, slo.getTimeFrameInMs(), new ArrayList<>(Arrays.asList(resourceLink)));
 
                 if(average != Double.NaN) {
@@ -101,14 +106,18 @@ public class SuccessRateSloBudget extends SLO<Double>{
                         case LESS_THAN:
                         case LESS_EQUALS: if (average / (Double) slo.getValue() >= 1){
                             val += 1;
+                            fullValue += average / (Double) slo.getValue();
                         } else {
                             val += average / (Double) slo.getValue();
+                            fullValue += average / (Double) slo.getValue();
                         } break;
                         case GREATER_THAN:
                         case GREATER_EQUALS:  if ((Double) slo.getValue() / average >= 1){
                             val += 1;
+                            fullValue += (Double) slo.getValue() / average;
                         } else {
                             val += (Double) slo.getValue() / average;
+                            fullValue += (Double) slo.getValue() / average;
                         } break;
                         case EQUALS:  break;
                         case RANGE: break; // TODO: implement range for TimeSLO
@@ -118,7 +127,10 @@ public class SuccessRateSloBudget extends SLO<Double>{
                 }
 
             }
-
+            if(fullValue < bestValue) {
+                bestExecution = resourceLink;
+                bestValue = fullValue;
+            }
             res.put(resourceLink, val);
         }
 
@@ -126,6 +138,18 @@ public class SuccessRateSloBudget extends SLO<Double>{
             for(String resourceLink : allResourceLinks){
                 res.put(resourceLink, 0d);
             }
+        }
+
+        // checking if any resources are maxed out
+        int maxedOut = 0;
+        for(String resourceLink : res.keySet()){
+            if(res.get(resourceLink) >= (maxValue - 0.1)){
+                maxedOut++;
+            }
+        }
+
+        if(maxedOut >= res.keySet().size()){
+            res.put(bestExecution, 0d);
         }
 
         return Collections.unmodifiableMap(res);
