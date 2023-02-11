@@ -85,7 +85,7 @@ public class Rule {
         for(SLO slo : additionalSlos){
             slo.getPoints().forEach((key, value) -> points.merge((String) key, (Double) value, (v1, v2) -> (Double)(v1 + v2)));
         }
-        if(logger.isDebugEnabled()){
+        if(logger.isDebugEnabled()||true){
             System.out.println("----------- SLO: Points -------------");
             for (Map.Entry<String, Double> entry : points.entrySet()) {
                 System.out.println(entry.getKey());

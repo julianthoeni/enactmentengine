@@ -357,9 +357,9 @@ public class FunctionNode extends Node {
                     MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
                 }
             }
-            slologger.writeRTT(name, pairResult.getRTT().toString());
-            slologger.writeCost(name, String.valueOf(calculated_cost));
-            slologger.writeFailR(name, String.valueOf(success));
+            slologger.writeRTT(name, pairResult.getRTT().toString(),resourceLink);
+            slologger.writeCost(name, String.valueOf(calculated_cost),resourceLink);
+            slologger.writeFailR(name, String.valueOf(success),resourceLink);
 
             return pairResult;
         }
