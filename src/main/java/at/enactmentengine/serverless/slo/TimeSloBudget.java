@@ -92,7 +92,7 @@ public class TimeSloBudget extends SLO<Double>{
             double fullValue = 0d;
 
             for (SloEntry slo : this.getEntries()){
-                maxValue++;
+
                 double average = getAverageRtt(timestamp, slo.getTimeFrameInMs(), new ArrayList<>(Arrays.asList(resourceLink)));
 
                 if(!Double.isNaN(average)) {
@@ -143,11 +143,10 @@ public class TimeSloBudget extends SLO<Double>{
         // checking if any resources are maxed out
         int maxedOut = 0;
         for(String resourceLink : res.keySet()){
-            if(res.get(resourceLink) >= (maxValue - 0.1)){
+            if(res.get(resourceLink) >= ((double) this.getEntries().size() - 0.1d)){
                 maxedOut++;
             }
         }
-
         if(maxedOut >= res.keySet().size()){
             res.put(bestExecution, 0d);
         }

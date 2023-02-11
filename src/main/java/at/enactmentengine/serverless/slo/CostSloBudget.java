@@ -91,10 +91,10 @@ public class CostSloBudget extends SLO<Double>{
             double fullValue = 0d;
 
             for (SloEntry slo : this.getEntries()){
-                maxValue++;
+
                 double average = getTotalCost(timestamp, slo.getTimeFrameInMs(), new ArrayList<>(Arrays.asList(resourceLink)));
 
-                if(average != Double.NaN) {
+                if(!Double.isNaN(average)) {
                     switch (slo.getOperator()) {
                         case LESS_THAN:
                         case LESS_EQUALS:
@@ -143,7 +143,7 @@ public class CostSloBudget extends SLO<Double>{
         // checking if any resources are maxed out
         int maxedOut = 0;
         for(String resourceLink : res.keySet()){
-            if(res.get(resourceLink) >= (maxValue - 0.1)){
+            if(res.get(resourceLink) >= ((double) this.getEntries().size() - 0.1d)){
                 maxedOut++;
             }
         }
