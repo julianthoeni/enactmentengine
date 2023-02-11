@@ -61,7 +61,7 @@ public class CostSloBudget extends SLO<Double>{
         for (SloEntry s : this.getEntries()) {
             if (s.getBudget() == null) return false; // no budget defined "throw error"
             System.out.println("Budget: " + usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()));
-            if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) > s.getBudget()){
+            if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) >= s.getBudget()){
                 LOGGER.info("SLO: Budget (" + s.getBudget() + ") used up for " + resourceLink );
                 return false;
             }
