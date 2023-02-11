@@ -11,7 +11,7 @@ public class TimeSloBudget extends SLO<Double>{
     public TimeSloBudget(SloOperator operator, Double value) {
         super(operator, value, null);
     }
-
+    SLO_LOGGER logger = SLO_LOGGER.getINSTANCE();
     public TimeSloBudget(SloOperator operator, Double value, String timeFrame){
         super (operator, value, timeFrame, null);
     }
@@ -61,11 +61,13 @@ public class TimeSloBudget extends SLO<Double>{
         for (SloEntry s : this.getEntries()) {
             if (s.getBudget() == null) return false; // no budget defined "throw error"
             if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) > s.getBudget()){
-                LOGGER.info("SLO: Budget (" + s.getBudget() + ") used up for " + resourceLink );
+                LOGGER.warn("SLO: Budget (" + s.getBudget() + ") used up for " + resourceLink );
+                logger.writeToLog("SLO: Budget (" + s.getBudget() + ") used up for " + resourceLink );
                 return false;
             }
         }
-        LOGGER.info("SLO: " + resourceLink + " is ok");
+        LOGGER.warn("SLO: " + resourceLink + " is ok");
+        logger.writeToLog(("SLO: " + resourceLink + " is ok"));
         return true;
     }
 

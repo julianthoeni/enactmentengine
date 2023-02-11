@@ -2,6 +2,8 @@ package at.enactmentengine.serverless.nodes;
 
 import at.enactmentengine.serverless.exception.MissingInputDataException;
 import at.enactmentengine.serverless.object.Utils;
+import at.enactmentengine.serverless.slo.SLO;
+import at.enactmentengine.serverless.slo.SLO_LOGGER;
 import at.enactmentengine.serverless.slo.SLOhandler;
 import at.uibk.dps.*;
 import at.uibk.dps.afcl.functions.objects.DataIns;
@@ -35,7 +37,7 @@ import java.util.*;
  * adapted by @author stefanpedratscher
  */
 public class FunctionNode extends Node {
-
+    SLO_LOGGER slologger = SLO_LOGGER.getINSTANCE();
     /**
      * Logger for the a function node.
      */
@@ -355,6 +357,10 @@ public class FunctionNode extends Node {
                     MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
                 }
             }
+            slologger.writeRTT(name, pairResult.getRTT().toString());
+            slologger.writeCost(name, String.valueOf(calculated_cost));
+            slologger.writeFailR(name, String.valueOf(success));
+
             return pairResult;
         }
 

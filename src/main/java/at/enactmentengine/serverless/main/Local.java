@@ -2,6 +2,7 @@ package at.enactmentengine.serverless.main;
 
 import at.enactmentengine.serverless.Simulation.SimulationParameters;
 import at.enactmentengine.serverless.slo.SLOhandler;
+import at.enactmentengine.serverless.slo.SLO_LOGGER;
 import at.uibk.dps.cronjob.ManualUpdate;
 import at.uibk.dps.databases.MongoDBAccess;
 import at.uibk.dps.util.Type;
@@ -119,11 +120,14 @@ public class Local {
             } else if (length > 1 && slo) {
                 //SLO Workflow-executor
                 SLOhandler handler = SLOhandler.getInstance();
+                SLO_LOGGER slologger = SLO_LOGGER.getINSTANCE();
                 String yamlFile = args[0];
                 handler.init("sloDatabase.properties", "mongoDatabase.properties", yamlFile);
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
+                slologger.writeToLog("--- Start executing workflow ---");
                 result = slos.executeWorkflow(args[0], args[1], -1, start);
                 handler.close();
+                slologger.writeToLog("--- Finished workflow-executing ---");
 
             } else if (length > 1) {
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
