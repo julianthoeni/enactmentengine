@@ -60,7 +60,7 @@ public class TimeSloBudget extends SLO<Double>{
         long timestamp = System.currentTimeMillis();
         for (SloEntry s : this.getEntries()) {
             if (s.getBudget() == null) return false; // no budget defined "throw error"
-            if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) > s.getBudget()){
+            if(usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink), s.getOperator(), (Double) s.getValue()) >= s.getBudget()){
                 LOGGER.warn("SLO: Budget (" + s.getBudget() + ") used up for " + resourceLink );
                 logger.writeToLog("SLO: Budget (" + s.getBudget() + ") used up for " + resourceLink );
                 return false;
