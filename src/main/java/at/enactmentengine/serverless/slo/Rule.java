@@ -78,6 +78,14 @@ public class Rule {
             points.put(resourceLink, 0d);
         }
 
+        // get remaining budget (if applied)
+        //Map<String, Integer> budget = new HashMap<>();
+        Map<String, Integer> mainSloBudget;
+
+        if(this.mainSlo.isBudgetType()){
+            mainSloBudget = ((BudgetSlo) mainSlo).getTotalBudgetLeft();
+        }
+
         // lowest points is best:
         // merge maps together and save to points map
         mainSlo.getPoints().forEach((key, value) -> points.merge((String) key, (Double) value, (v1, v2) -> 2 * (Double)(v1 + v2)));

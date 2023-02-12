@@ -75,13 +75,14 @@ public abstract class SLO<E> {
     private List<SloEntry> entries;
     // data is used for agreement calculation (made by user)
     private SloData data;
+    private boolean isBudgetType = false;
 
 
     public abstract boolean isInAgreement(String resourceLink);
 
     protected abstract Map<String, Double> getPoints();
 
-    protected Map<String, List<SloData.DataEntry>> getDataByResourceLink(){
+        protected Map<String, List<SloData.DataEntry>> getDataByResourceLink(){
         List<SloData.DataEntry> entries = this.getData().getList();
 
         // group by resourcelinks:
@@ -94,6 +95,9 @@ public abstract class SLO<E> {
     public SLO(SloOperator operator, E value, Integer budget){
         this.entries = new ArrayList<>();
         this.entries.add(new SloEntry(value, operator, "24h", budget));
+        if(budget != null) {
+            this.isBudgetType = true;
+        }
     }
 
     public SLO(SloOperator operator, E value, String timeFrame, Integer budget){
@@ -115,5 +119,9 @@ public abstract class SLO<E> {
 
     public SloData getData() {
         return data;
+    }
+
+    public boolean isBudgetType() {
+        return isBudgetType;
     }
 }

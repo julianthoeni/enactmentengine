@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SuccessRateSloBudget extends SLO<Double>{
+public class SuccessRateSloBudget extends BudgetSlo<Double>{
     private static final Logger LOGGER = LoggerFactory.getLogger(Rule.class);
 
     public SuccessRateSloBudget(SloOperator operator, Double value) {
@@ -31,7 +31,7 @@ public class SuccessRateSloBudget extends SLO<Double>{
         return Collections.unmodifiableList(this.getData().getList().stream().filter(c -> c.getTimestamp() > currentTime - timeFrameInMs).filter(c -> resourceLinks.contains(c.getResourceLink())).collect(Collectors.toList()));
     }
 
-    private int usedBudgetByTimeFrame(long currentTime, long timeFrameInMs, List<String> resourceLinks, SloOperator operator, Double value){
+    protected int usedBudgetByTimeFrame(long currentTime, long timeFrameInMs, List<String> resourceLinks, SloOperator operator, Double value){
         int hits = 0;
         List<SloData.DataEntry> entries = this.getEntriesWithinTimeFrame(currentTime, timeFrameInMs, resourceLinks);
 
@@ -60,6 +60,35 @@ public class SuccessRateSloBudget extends SLO<Double>{
         }*/
 
         return hits;
+    }
+
+    @Override
+    protected Map<String, Integer> getTotalBudgetLeft() {
+        Map<String, Integer> totalBudget = new HashMap<>();
+        List<String> allResourceLinks = new LinkedList<>(this.getData().getResourceLinks());
+
+
+        long timestamp = System.currentTimeMillis();
+        for(String resource : this.getDataByResourceLink().keySet()) {
+            allResourceLinks.remove(resource);
+            for (SloEntry s : this.getEntries()) {
+                if (s.getBudget() == null) return null;
+                totalBudget.put(resource, totalBudget.getOrDefault(resource, 0) + s.getBudget() - usedBudgetByTimeFrame(timestamp, s.getTimeFrameInMs(), Arrays.asList(resource), s.getOperator(), (Double) s.getValue()));
+            }
+        }
+
+        if(allResourceLinks.size() > 0) {
+            int defaultBudget = 0;
+            for (SloEntry s : this.getEntries()) {
+                defaultBudget += s.getBudget();
+            }
+
+            for (String resource : allResourceLinks) {
+                totalBudget.put(resource, defaultBudget);
+            }
+        }
+
+        return totalBudget;
     }
 
     @Override
@@ -149,8 +178,28 @@ public class SuccessRateSloBudget extends SLO<Double>{
         }
 
         if(maxedOut >= res.keySet().size()){
-            res.put(bestExecution, 0d);
+            // first check if any budget is left somewhere:
+            Map<String, Integer> budget = this.getTotalBudgetLeft();
+            int bestBudget = 0;
+            String bestBudgetResource = "";
+
+            for(String resource : budget.keySet()){
+                if(budget.get(resource) > bestBudget){
+                    bestBudget = budget.get(resource);
+                    bestBudgetResource = resource;
+                }
+            }
+
+            if(bestBudgetResource != null){
+                if (bestBudgetResource.equals(bestExecution)){
+                    res.put(bestExecution, 0d);
+                } else {
+                    res.put(bestBudgetResource, 0d);
+                }
+            }
+
         }
+
 
         return Collections.unmodifiableMap(res);
     }
