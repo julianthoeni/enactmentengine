@@ -113,7 +113,7 @@ public class RuleFactory {
                     else if(temp == null) {
                         switch (entry.unit) { // temp data TODO: add first entry from list, and remove from list
                             case "$":
-                                if(singleSloSetting.budget == null){
+                                if(singleSloSetting.budget == null || singleSloSetting.budget <= 0){
                                     temp = new CostSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
                                 } else {
                                     temp = new CostSloBudget(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period, singleSloSetting.budget);
@@ -121,7 +121,7 @@ public class RuleFactory {
 
                                 break;
                             case "%":
-                                if(singleSloSetting.budget == null){
+                                if(singleSloSetting.budget == null || singleSloSetting.budget <= 0){
                                     temp = new SuccessRateSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
                                 } else {
                                     temp = new SuccessRateSloBudget(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period, singleSloSetting.budget);
@@ -130,7 +130,7 @@ public class RuleFactory {
                             case "s": // why is language level 8?
                             case "h":
                             case "ms":
-                                if(singleSloSetting.budget == null){
+                                if(singleSloSetting.budget == null || singleSloSetting.budget <= 0){
                                     temp = new TimeSlo(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period);
                                 } else {
                                     temp = new TimeSloBudget(singleSloSetting.operator, Double.parseDouble(singleSloSetting.value), singleSloSetting.period, singleSloSetting.budget);

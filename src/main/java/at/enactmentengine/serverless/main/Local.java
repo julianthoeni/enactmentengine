@@ -121,6 +121,8 @@ public class Local {
                 //SLO Workflow-executor
                 SLOhandler handler = SLOhandler.getInstance();
                 SLO_LOGGER slologger = SLO_LOGGER.getINSTANCE();
+                File  slologger_file = new File("./log/enable.txt");
+                slologger.setEnabled(slologger_file.exists());
                 String yamlFile = args[0];
                 handler.init("sloDatabase.properties", "mongoDatabase.properties", yamlFile);
                 MongoDBAccess.saveLogWorkflowStart(Type.EXEC, workflowContent, workflowInput, start);
