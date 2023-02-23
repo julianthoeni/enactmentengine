@@ -2,6 +2,7 @@ package at.enactmentengine.serverless.slo;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SuccessRateSlo extends SLO<Double>{
 
@@ -26,9 +27,13 @@ public class SuccessRateSlo extends SLO<Double>{
     public boolean isInAgreement(String resourceLink) {
         // create timestamp:
         long timestamp = System.currentTimeMillis();
+
         for (SloEntry s : this.getEntries()){
             double successRate = getSuccessRate(timestamp, s.getTimeFrameInMs(), Arrays.asList(resourceLink));
             //System.out.println("Average Success rate: " + successRate);
+            if(this.getData().getList().stream().filter(c -> c.getTimestamp() > timestamp - s.getTimeFrameInMs()).filter(c -> Arrays.asList(resourceLink).contains(c.getResourceLink())).collect(Collectors.toList()).size() < 1){
+                continue;
+            }
             switch(s.getOperator()){
                 case LESS_THAN: if (!(successRate < (Double) s.getValue())){
                     return false;
