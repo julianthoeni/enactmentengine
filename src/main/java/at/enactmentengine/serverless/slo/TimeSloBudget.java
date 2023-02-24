@@ -187,7 +187,7 @@ public class TimeSloBudget extends BudgetSlo<Double>{
 
         for(String resourceLink : res.keySet()){
             double val = fullResults.get(resourceLink);
-            fullResults.put(resourceLink, val / worstExecution);
+            fullResults.put(resourceLink, this.getEntries().size()* (val / worstExecution));
         }
 
         // checking if any resources are maxed out

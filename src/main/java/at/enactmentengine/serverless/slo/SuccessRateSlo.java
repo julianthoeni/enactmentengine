@@ -122,7 +122,7 @@ public class SuccessRateSlo extends SLO<Double>{
 
         for(String resourceLink : res.keySet()){
             double val = res.get(resourceLink);
-            res.put(resourceLink, val / worstExecution);
+            res.put(resourceLink, this.getEntries().size() * (val / worstExecution));
         }
 
         // checking if any resources are maxed out
