@@ -108,6 +108,7 @@ public class TimeSloBudget extends BudgetSlo<Double>{
     @Override
     protected Map<String, Double> getPoints() {
         Map<String, Double> res = new HashMap<>();
+        Map<String, Double> fullResults = new HashMap<>();
         Map<String, List<SloData.DataEntry>> dataByResourceLink = this.getDataByResourceLink();
         List<String> allResourceLinks = new LinkedList<>(this.getData().getResourceLinks());
 
@@ -166,21 +167,37 @@ public class TimeSloBudget extends BudgetSlo<Double>{
             }
 
             res.put(resourceLink, val);
+            fullResults.put(resourceLink, fullValue);
         }
 
         if(allResourceLinks.size() > 0){
             for(String resourceLink : allResourceLinks){
                 res.put(resourceLink, 0d);
+                fullResults.put(resourceLink, 0d);
             }
+        }
+
+        // normalize all values in res map:
+        double worstExecution = 0.1d; // no divide / 0
+        for (String resourceLink : fullResults.keySet()){
+            if (fullResults.get(resourceLink) > worstExecution) {
+                worstExecution = fullResults.get(resourceLink);
+            }
+        }
+
+        for(String resourceLink : res.keySet()){
+            double val = fullResults.get(resourceLink);
+            fullResults.put(resourceLink, val / worstExecution);
         }
 
         // checking if any resources are maxed out
         int maxedOut = 0;
-        for(String resourceLink : res.keySet()){
-            if(res.get(resourceLink) >= ((double) this.getEntries().size() - 0.1d)){
+        for(String resourceLink : res.keySet()) {
+            if (res.get(resourceLink) >= ((double) this.getEntries().size() - 0.1d)) {
                 maxedOut++;
             }
         }
+
         if(maxedOut >= res.keySet().size()){
             
             // first check if any budget is left somewhere:
@@ -197,16 +214,16 @@ public class TimeSloBudget extends BudgetSlo<Double>{
 
             if(bestBudgetResource != null){
                 if (bestBudgetResource.equals(bestExecution)){
-                    res.put(bestExecution, 0d);
+                    //fullResults.put(bestExecution, 0d);
                 } else {
-                    res.put(bestBudgetResource, 0d);
+                    fullResults.put(bestBudgetResource, 0d);
                 }
             } else {
-                res.put(bestExecution, 0d);
+                //res.put(bestExecution, 0d);
             }
 
         }
 
-        return Collections.unmodifiableMap(res);
+        return Collections.unmodifiableMap(fullResults);
     }
 }

@@ -79,21 +79,15 @@ public class TimeSlo extends SLO<Double>{
 
                 switch(slo.getOperator()){
                     case LESS_THAN:
-                    case LESS_EQUALS: if (average / (Double) slo.getValue() >= 1){
-                        val += 1;
-                        fullValue += average / (Double) slo.getValue();
-                    } else {
+                    case LESS_EQUALS:
                         val += average / (Double) slo.getValue();
                         fullValue += average / (Double) slo.getValue();
-                    } break;
+                        break;
                     case GREATER_THAN:
-                    case GREATER_EQUALS:  if ((Double) slo.getValue() / average >= 1){
-                        val += 1;
-                        fullValue += (Double) slo.getValue() / average;
-                    } else {
+                    case GREATER_EQUALS:
                         val += (Double) slo.getValue() / average;
                         fullValue += (Double) slo.getValue() / average;
-                    } break;
+                        break;
                     case EQUALS:  break;
                     case RANGE: break; // TODO: implement range for TimeSLO
                 }
@@ -112,6 +106,19 @@ public class TimeSlo extends SLO<Double>{
             }
         }
 
+        // normalize all values in res map:
+        double worstExecution = 0.1d; // no divide / 0
+        for (String resourceLink : res.keySet()){
+            if (res.get(resourceLink) > worstExecution) {
+                worstExecution = res.get(resourceLink);
+            }
+        }
+
+        for(String resourceLink : res.keySet()){
+            double val = res.get(resourceLink);
+            res.put(resourceLink, val / worstExecution);
+        }
+
         // checking if any resources are maxed out
         int maxedOut = 0;
         for(String resourceLink : res.keySet()){
@@ -120,9 +127,9 @@ public class TimeSlo extends SLO<Double>{
             }
         }
 
-        if(maxedOut >= res.keySet().size()){
-            res.put(bestExecution, 0d);
-        }
+        //if(maxedOut >= res.keySet().size()){
+        //    res.put(bestExecution, 0d);
+        //}
 
         return Collections.unmodifiableMap(res);
     }
