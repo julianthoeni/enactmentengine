@@ -83,6 +83,7 @@ public class SuccessRateSlo extends SLO<Double>{
                 maxValue++;
                 double average = getSuccessRate(timestamp, slo.getTimeFrameInMs(), new ArrayList<>(Arrays.asList(resourceLink)));
 
+            if(!Double.isNaN(average)){
                 switch(slo.getOperator()){
                     case LESS_THAN:
                     case LESS_EQUALS:
@@ -91,13 +92,15 @@ public class SuccessRateSlo extends SLO<Double>{
                         break;
                     case GREATER_THAN:
                     case GREATER_EQUALS:
-                        val += (Double) slo.getValue() / average;
-                        fullValue += (Double) slo.getValue() / average;
+                        val += (Double) slo.getValue() / (average + 0.01d);
+                        fullValue += (Double) slo.getValue() / (average + 0.01d);
                         break;
                     case EQUALS:  break;
                     case RANGE: break; // TODO: implement range for TimeSLO
                 }
-
+            }else{
+                val = 0.0d;
+            }
             }
             if(fullValue < bestValue) {
                 bestExecution = resourceLink;
@@ -122,7 +125,11 @@ public class SuccessRateSlo extends SLO<Double>{
 
         for(String resourceLink : res.keySet()){
             double val = res.get(resourceLink);
-            res.put(resourceLink, this.getEntries().size() * (val / worstExecution));
+            if((bestValue*10)<worstExecution){
+                res.put(resourceLink, this.getEntries().size() * (val / 10));
+            }else{
+                res.put(resourceLink, this.getEntries().size() * (val / worstExecution));
+            }
         }
 
         // checking if any resources are maxed out
@@ -136,7 +143,6 @@ public class SuccessRateSlo extends SLO<Double>{
         //if(maxedOut >= res.keySet().size()){
         //    res.put(bestExecution, 0d);
         //}
-
         return Collections.unmodifiableMap(res);
     }
 }

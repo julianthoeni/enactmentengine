@@ -77,19 +77,23 @@ public class TimeSlo extends SLO<Double>{
                 maxValue++;
                 double average = getAverageRtt(timestamp, slo.getTimeFrameInMs(), new ArrayList<>(Arrays.asList(resourceLink)));
 
-                switch(slo.getOperator()){
-                    case LESS_THAN:
-                    case LESS_EQUALS:
-                        val += average / (Double) slo.getValue();
-                        fullValue += average / (Double) slo.getValue();
-                        break;
-                    case GREATER_THAN:
-                    case GREATER_EQUALS:
-                        val += (Double) slo.getValue() / average;
-                        fullValue += (Double) slo.getValue() / average;
-                        break;
-                    case EQUALS:  break;
-                    case RANGE: break; // TODO: implement range for TimeSLO
+                if(!Double.isNaN(average)){
+                    switch(slo.getOperator()){
+                        case LESS_THAN:
+                        case LESS_EQUALS:
+                            val += average / (Double) slo.getValue();
+                            fullValue += average / (Double) slo.getValue();
+                            break;
+                        case GREATER_THAN:
+                        case GREATER_EQUALS:
+                            val += (Double) slo.getValue() / (average + 0.01d);
+                            fullValue += (Double) slo.getValue() / (average + 0.01d);
+                            break;
+                        case EQUALS:  break;
+                        case RANGE: break; // TODO: implement range for TimeSLO
+                    }
+                }else{
+                    val = 0.0d;
                 }
 
             }
@@ -116,7 +120,11 @@ public class TimeSlo extends SLO<Double>{
 
         for(String resourceLink : res.keySet()){
             double val = res.get(resourceLink);
-            res.put(resourceLink, this.getEntries().size() * (val / worstExecution));
+            if((bestValue*10)<worstExecution){
+                res.put(resourceLink, this.getEntries().size() * (val / 10));
+            }else{
+                res.put(resourceLink, this.getEntries().size() * (val / worstExecution));
+            }
         }
 
         // checking if any resources are maxed out
