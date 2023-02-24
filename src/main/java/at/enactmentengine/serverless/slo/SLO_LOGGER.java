@@ -91,7 +91,7 @@ public final class SLO_LOGGER {
     public void writeFailR(String function_name, String msg, String resourceLink){
         if(this.enabled){
             try {
-                File file = new File("log/logging_failr_" +function_name + ".txt");
+                File file = new File("log/logging_successrate_" +function_name + ".txt");
                 FileWriter fr = new FileWriter(file, true);
                 BufferedWriter br = new BufferedWriter(fr);
                 br.write(getTime().concat(",").concat(resourceLink).concat(",").concat(msg.concat("\n")));

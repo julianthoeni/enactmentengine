@@ -142,12 +142,12 @@ public class SuccessRateSloBudget extends BudgetSlo<Double>{
                             fullValue += average / (Double) slo.getValue();
                         } break;
                         case GREATER_THAN:
-                        case GREATER_EQUALS:  if ((Double) slo.getValue() / average >= 1){
+                        case GREATER_EQUALS:  if ((Double) slo.getValue() / (average + 0.01d) >= 1){
                             val += 1;
-                            fullValue += (Double) slo.getValue() / average;
+                            fullValue += (Double) slo.getValue() / (average + 0.01d);
                         } else {
-                            val += (Double) slo.getValue() / average;
-                            fullValue += (Double) slo.getValue() / average;
+                            val += (Double) slo.getValue() / (average + 0.01d);
+                            fullValue += (Double) slo.getValue() / (average + 0.01d);
                         } break;
                         case EQUALS:  break;
                         case RANGE: break; // TODO: implement range for TimeSLO
@@ -174,15 +174,15 @@ public class SuccessRateSloBudget extends BudgetSlo<Double>{
 
         // normalize all values in res map:
         double worstExecution = 0.1d; // no divide / 0
-        for (String resourceLink : res.keySet()){
-            if (res.get(resourceLink) > worstExecution) {
-                worstExecution = res.get(resourceLink);
+        for (String resourceLink : fullResults.keySet()){
+            if (fullResults.get(resourceLink) > worstExecution) {
+                worstExecution = fullResults.get(resourceLink);
             }
         }
 
         for(String resourceLink : res.keySet()){
-            double val = res.get(resourceLink);
-            res.put(resourceLink, val / worstExecution);
+            double val = fullResults.get(resourceLink);
+            fullResults.put(resourceLink, val / worstExecution);
         }
 
         // checking if any resources are maxed out

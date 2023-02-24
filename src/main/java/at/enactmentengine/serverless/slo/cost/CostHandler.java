@@ -11,9 +11,9 @@ public class CostHandler {
         this.regionPricingList.putAll(regionPricingList);
     }
 
-    public double getPricingFromRegion(String region, int ms, int memoryMB){
+    public double getPricingFromRegion(String region, int ms, int memoryMB,float multiplierMemory){
         float costPerGBsecond = this.regionPricingList.get(region);
-        float cost = ms * memoryMB * (costPerGBsecond/1024000);
+        float cost = ms * memoryMB * multiplierMemory * (costPerGBsecond/1024000);
 
         return cost;
     }

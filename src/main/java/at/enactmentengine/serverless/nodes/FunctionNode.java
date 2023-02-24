@@ -333,7 +333,7 @@ public class FunctionNode extends Node {
                 if(function_duration == 0) function_duration = 1;
                 function_timeout = Integer.parseInt((json.get("timeout")).toString());
                 //calculate total cost of function-invocation
-                calculated_cost = slohandler.getCostHandler().getPricingFromRegion(regionCode,function_duration,function_memory);
+                calculated_cost = slohandler.getCostHandler().getPricingFromRegion(regionCode,function_duration,function_memory,1.0f);
                 if(logger.isDebugEnabled()){
                     System.out.println("------ Function Characteristics -----");
                     System.out.println("Memory: "+function_memory+"MB");
@@ -348,10 +348,15 @@ public class FunctionNode extends Node {
                 //Save to mongodb
                 MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
             }else{
-                if(resultString.contains("errorMessage") && resultString.contains(" Task timed out after ")){
+                if(resultString.contains("errorMessage") && resultString.contains("Task timed out after")){
                     logger.warn("Function has timed out: " + resourceLink + ". No information will be stored");
                     MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
-                }else{
+                }else if(resultString.contains("errorMessage") && resultString.contains("Function failed!")){
+                    logger.warn("Function (" + resourceLink + ") failed. Nothing will be charged.");
+                    MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);
+                }
+
+                else{
                     // Maybe add approximation method from sashko here
                     logger.warn("Function (" + resourceLink + ")does not return information about memory, duration or timeout. No information will be stored.");
                     MongoDBAccess.saveLog(event, resourceLink, deployment, name, type, resultString, pairResult.getRTT(), calculated_cost, success, loopCounter, maxLoopCounter, start, Type.EXEC);

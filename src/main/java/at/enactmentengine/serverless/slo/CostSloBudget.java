@@ -138,12 +138,12 @@ public class CostSloBudget extends BudgetSlo<Double>{
                             break;
                         case GREATER_THAN:
                         case GREATER_EQUALS:
-                            if ((Double) slo.getValue() / average >= 1) {
+                            if ((Double) slo.getValue() / (average + 0.01d) >= 1) {
                                 val += 1;
-                                fullValue +=(Double) slo.getValue() / average;
+                                fullValue +=(Double) slo.getValue() / (average + 0.01d);
                             } else {
-                                val += (Double) slo.getValue() / average;
-                                fullValue += (Double) slo.getValue() / average;
+                                val += (Double) slo.getValue() / (average + 0.01d);
+                                fullValue += (Double) slo.getValue() / (average + 0.01d);
                             }
                             break;
                         case EQUALS:
